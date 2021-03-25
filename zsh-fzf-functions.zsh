@@ -146,3 +146,11 @@ fzf-clipman() {
 }
 zle -N fzf-clipman
 bindkey -e '^B' fzf-clipman
+
+if [ $PopUp ]; then
+    if command -v subl &> /dev/null; then
+        TRAPUSR2() {zle clear-screen ; subl=true fzf-clipman }
+    fi
+else
+    TRAPUSR2() {  }
+fi
