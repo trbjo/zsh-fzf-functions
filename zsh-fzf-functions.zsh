@@ -77,7 +77,7 @@ fzf-downloads-widget() {
                 cd "$current_dir"
                 for file in "${(q)out[@]:1}"
                 do
-                    LBUFFER+="/home/tb/Downloads/$file "
+                    LBUFFER+="$HOME/Downloads/$file "
                 done
                 ;;
             (ctrl-o)
@@ -128,7 +128,7 @@ deleter() {
 }
 
 fzf-password() {
-    /usr/bin/fd . --extension gpg --base-directory /home/tb/.password-store | sed -e 's/.gpg$//' | sort | fzf --no-multi --preview-window=hidden --bind 'alt-w:abort+execute-silent@wl-copy -n -- $(pass {})@,enter:execute-silent@[ $PopUp ] && swaymsg "focus tiling; [app_id=^(subl|sublime_text|firefox)$ app_id=__focused__ workspace=^(3|2λ)$] fullscreen enable; [app_id=^PopUp$] scratchpad show"; wl-copy -n -- $(pass {})@+abort'
+    /usr/bin/fd . --extension gpg --base-directory $HOME/.password-store | sed -e 's/.gpg$//' | sort | fzf --no-multi --preview-window=hidden --bind 'alt-w:abort+execute-silent@wl-copy -n -- $(pass {})@,enter:execute-silent@[ $PopUp ] && swaymsg "focus tiling; [app_id=^(subl|sublime_text|firefox)$ app_id=__focused__ workspace=^(3|2λ)$] fullscreen enable; [app_id=^PopUp$] scratchpad show"; wl-copy -n -- $(pass {})@+abort'
     zle redisplay
     (deleter &) > /dev/null 2>&1
 }
