@@ -99,25 +99,32 @@ zle -N fzf-downloads-widget
 bindkey '^O' fzf-downloads-widget
 
 
-
-# Paste the selected command from history into the command line
+# Paste the selected command(s) from history into the command line
 fzf-history-widget() {
-    local selected num
+    local IFS=$'\n'
+    local out separator_var=";"
     setopt localoptions noglobsubst noposixbuiltins pipefail no_aliases 2> /dev/null
-    selected=( $(fc -rl 1 |
-                 FZF_DEFAULT_OPTS=" $FZF_DEFAULT_OPTS -n2..,.. --preview-window=bottom:4 --preview 'echo {2..}' --tiebreak=index --bind \"alt-w:execute-silent(wl-copy -- {2..})+abort\" --query=${(qqq)LBUFFER} +m" fzf) )
-    local ret=$?
-    if [ -n "$selected" ]; then
-        num=$selected[1]
-        if [ -n "$num" ]; then
-            zle vi-fetch-history -n $num
+    out=( $(fc -rl 1 |
+                 FZF_DEFAULT_OPTS=" $FZF_DEFAULT_OPTS --expect=ctrl-o,ctrl-p,enter --with-nth=2.. --nth=2..,.. --preview-window=bottom:4 --preview 'echo {2..}' --tiebreak=index --bind \"alt-w:execute-silent(wl-copy -- {2..})+abort\" --query=${(qqq)LBUFFER}" fzf) )
+    if [ -n "$out" ]; then
+        if [[ "${out[@]:0:1}" == "ctrl-p" ]]; then
+            separator_var=" &&"
         fi
+        [[ ${LBUFFER} ]] && LBUFFER+="$separator_var "
+        LBUFFER+="${${out[@]:1:1}#*  }"
+        for hist in "${out[@]:2}"
+        do
+            LBUFFER+="$separator_var ${hist#*  }"
+        done
     fi
     zle reset-prompt
-    return $ret
 }
 zle -N fzf-history-widget
+
 bindkey '^R' fzf-history-widget
+
+
+
 
 
 
