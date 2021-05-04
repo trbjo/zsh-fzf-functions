@@ -98,7 +98,6 @@ fzf-downloads-widget() {
 zle -N fzf-downloads-widget
 bindkey '^O' fzf-downloads-widget
 
-
 # Paste the selected command(s) from history into the command line
 fzf-history-widget() {
     local IFS=$'\n'
@@ -110,15 +109,14 @@ fzf-history-widget() {
         myQuery="${(qqq)LBUFFER}"
     fi
 
-    out=( $(fc -rli 1 |
-                 FZF_DEFAULT_OPTS=" $FZF_DEFAULT_OPTS --expect=ctrl-/,ctrl-p,enter --delimiter='  ' --with-nth=2.. --nth=3..,.. --preview-window=bottom:4 --preview 'echo {3..}' --tiebreak=index --bind \"alt-w:execute-silent(wl-copy -- {2..})+abort\" --query=${myQuery}" fzf) )
+    out=( $(fc -rnli 1 |
+                 FZF_DEFAULT_OPTS=" $FZF_DEFAULT_OPTS --expect=ctrl-/,ctrl-p,enter --delimiter='  ' --nth=2.. --preview-window=bottom:4 --preview 'echo {2..}' --no-hscroll --tiebreak=index --bind \"alt-w:execute-silent(wl-copy -- {2..})+abort\" --query=${myQuery}" fzf) )
     if [ -n "$out" ]; then
 
 
         if [[ ${LBUFFER: -2} == "&&" ]] || [[ ${LBUFFER: -1} == ";" ]]; then
             LBUFFER+=' '
         fi
-
 
         key="${out[@]:0:1}"
         if [[ "$key" == "ctrl-p" ]]; then
@@ -144,7 +142,6 @@ fzf-history-widget() {
     zle reset-prompt
 }
 zle -N fzf-history-widget
-
 bindkey '^R' fzf-history-widget
 
 
