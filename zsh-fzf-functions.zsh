@@ -42,14 +42,12 @@ fzf-widget() {
         cd "$(dirname "$(readlink -e "${out[@]:1}")")"
         ;;
         (*)
-        u "${out[@]}"
+        _file_opener "${out[@]}"
         ;;
     esac
     zle fzf-redraw-prompt
     zle redisplay
-    local ret=$?
-    return $ret
-    # return 0
+    return
 }
 zle     -N    fzf-widget
 bindkey '^P' fzf-widget
@@ -85,7 +83,7 @@ fzf-downloads-widget() {
                 ;;
             (*)
                 [[ -f "${out[1]}" ]] && ISFILE=1
-                touch "${out[@]}" && u "${out[@]}"
+                touch "${out[@]}" && _file_opener "${out[@]}"
                 [[ $ISFILE ]] && cd $current_dir
                 ;;
         esac
