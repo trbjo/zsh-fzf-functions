@@ -147,16 +147,17 @@ bindkey '^R' fzf-history-widget
 
 
 
-deleter() {
-    local pw="$(wl-paste -n)"
-    sleep 15
-    clipman clear --tool=CUSTOM --print0 --tool-args="printf \"$pw\""
-}
+# deleter() {
+    # local pw="$(wl-paste -n)"
+    # sleep 15
+    # clipman clear --tool=CUSTOM --print0 --tool-args="printf \"$pw\""
+# }
 
 fzf-password() {
-    /usr/bin/fd . --extension gpg --base-directory $HOME/.password-store | sed -e 's/.gpg$//' | sort | fzf --no-multi --preview-window=hidden --bind 'alt-w:abort+execute-silent@wl-copy -n -- $(pass {})@,enter:execute-silent@[ $PopUp ] && swaymsg "focus tiling; [app_id=^(subl|sublime_text|firefox)$ app_id=__focused__ workspace=^(3|2λ)$] fullscreen enable; [app_id=^PopUp$] scratchpad show"; wl-copy -n -- $(pass {})@+abort'
+    /usr/bin/fd . --extension gpg --base-directory $HOME/.password-store | sed -e 's/.gpg$//' | sort | fzf --no-multi --preview-window=hidden --bind 'alt-w:abort+execute-silent@touch /tmp/clipman_ignore ; wl-copy -n -- $(pass {})@,enter:execute-silent@[ $PopUp ] && swaymsg "focus tiling; [app_id=^(subl|sublime_text|firefox)$ app_id=__focused__ workspace=^(3|2λ)$] fullscreen enable; [app_id=^PopUp$] scratchpad show"; touch /tmp/clipman_ignore; wl-copy -n -- $(pass {})@+abort'
+    rm /tmp/clipman_ignore
     zle redisplay
-    (deleter &) > /dev/null 2>&1
+    # (deleter &) > /dev/null 2>&1
 }
 zle -N fzf-password
 bindkey -e '^K' fzf-password
