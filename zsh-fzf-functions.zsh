@@ -45,7 +45,6 @@ fzf-widget() {
         _file_opener "${out[@]}"
         ;;
     esac
-    zle fzf-redraw-prompt
     zle redisplay
     return
 }
@@ -53,14 +52,11 @@ zle     -N    fzf-widget
 bindkey '^P' fzf-widget
 
 fzf-downloads-widget() {
-    # if [[ $#RBUFFER -ne 0 ]]; then
-        # zle delete-char-or-list
-    # else
         # this ensures that file paths with spaces are not interpreted as different files
         local IFS=$'\n'
         setopt localoptions pipefail no_aliases 2> /dev/null
         current_dir=$PWD
-        cd ~/Downloads
+        cd ~/dl
         # local out=($(exa --color=always --sort oldest | fzf --tiebreak=index --no-sort --ansi --expect=ctrl-o,ctrl-p))
         local out=($(ls --color=always -ct -1 | fzf --tiebreak=index --no-sort --ansi --expect=ctrl-o,ctrl-p))
         if [[ -z "$out" ]]; then
@@ -75,7 +71,7 @@ fzf-downloads-widget() {
                 cd "$current_dir"
                 for file in "${(q)out[@]:1}"
                 do
-                    LBUFFER+="$HOME/Downloads/$file "
+                    LBUFFER+="$HOME/dl/$file "
                 done
                 ;;
             (ctrl-o)
@@ -88,10 +84,8 @@ fzf-downloads-widget() {
                 ;;
         esac
         unset ISFILE
-        zle fzf-redraw-prompt
         local ret=$?
         return $ret
-# fi
 }
 zle -N fzf-downloads-widget
 bindkey '^O' fzf-downloads-widget
@@ -163,17 +157,9 @@ zle -N fzf-password
 bindkey -e '^K' fzf-password
 
 fzf-clipman() {
-    clipman pick --max-items=2000 --print0 --tool=CUSTOM --tool-args="fzf --read0 --preview 'echo {+}' --bind 'ctrl-_:execute-silent(echo -E {} > /tmp/pw; clipman clear --tool=CUSTOM --print0 --tool-args=\"cat /tmp/pw\")+abort,enter:execute-silent(wl-copy -- {+}; [ $PopUp ] && swaymsg \"focus tiling; [app_id=^(subl|sublime_text|firefox)$ app_id=__focused__ workspace=^(3|2λ)$] fullscreen enable; [app_id=^PopUp$] scratchpad show\"; [ $subl ] && subl --command paste_and_indent)+abort,alt-w:execute-silent(wl-copy -- {+})+abort,esc:execute-silent([ $subl ] && swaymsg scratchpad show)+cancel'"
+    clipman pick --max-items=2000 --print0 --tool=CUSTOM --tool-args="fzf --read0 --preview 'echo {+}' --bind 'ctrl-_:execute-silent(echo -E {} > /tmp/pw; clipman clear --tool=CUSTOM --print0 --tool-args=\"cat /tmp/pw\")+abort,enter:execute-silent(wl-copy -- {+}; [ $PopUp ] && swaymsg \"focus tiling; [app_id=^(subl|sublime_text|firefox)$ app_id=__focused__ workspace=^(3|2λ)$] fullscreen enable; [app_id=^PopUp$] scratchpad show\"; [ $subl ] && subl --command paste_and_indent)+abort,alt-w:execute-silent(wl-copy -- {+}; swaymsg scratchpad show)+abort,esc:execute-silent([ $subl ] && swaymsg scratchpad show)+cancel'"
     rm -f /tmp/pw
-    zle redisplay
+    # zle redisplay
 }
 zle -N fzf-clipman
 bindkey -e '^B' fzf-clipman
-
-if [ $PopUp ]; then
-    if command -v subl &> /dev/null; then
-        TRAPUSR2() {zle clear-screen ; subl=true fzf-clipman }
-    fi
-else
-    TRAPUSR2() {  }
-fi
