@@ -12,11 +12,11 @@ fif() {
 
 # Ensure precmds are run after cd
 fzf-redraw-prompt() {
-  local precmd
-  for precmd in $precmd_functions; do
-    $precmd
-done
-zle reset-prompt
+    print
+    local precmd
+    for precmd in $precmd_functions; do
+        $precmd
+    done
 }
 zle -N fzf-redraw-prompt
 
@@ -33,19 +33,20 @@ fzf-widget() {
     # we save it as an array instead of one string to be able to parse it as separate arguments
     case "$key" in
         (ctrl-p)
-        for file in "${(q)out[@]:1}"
+        for file in "${(q)out[@]:1:a}"
         do
-            LBUFFER+="$(readlink -f $file) "
+            LBUFFER+="${file} "
         done
+        zle reset-prompt
         ;;
         (ctrl-o)
-        cd "$(dirname "$(readlink -e "${out[@]:1}")")"
+        cd ${${out[@]:1:a}%/*}
+        zle fzf-redraw-prompt
         ;;
         (*)
         _file_opener "${out[@]}"
         ;;
     esac
-    zle redisplay
     return
 }
 zle     -N    fzf-widget
@@ -55,37 +56,29 @@ fzf-downloads-widget() {
         # this ensures that file paths with spaces are not interpreted as different files
         local IFS=$'\n'
         setopt localoptions pipefail no_aliases 2> /dev/null
-        current_dir=$PWD
-        cd ~/dl
-        # local out=($(exa --color=always --sort oldest | fzf --tiebreak=index --no-sort --ansi --expect=ctrl-o,ctrl-p))
-        local out=($(ls --color=always -ct -1 | fzf --tiebreak=index --no-sort --ansi --expect=ctrl-o,ctrl-p))
+        local out=($(ls --color=always -ctd1 ${XDG_DOWNLOAD_DIR}/* | fzf --tiebreak=index --delimiter=/ --with-nth=4.. --no-sort --ansi --expect=ctrl-o,ctrl-p))
         if [[ -z "$out" ]]; then
-            cd "$current_dir"
-            # cd -
             zle redisplay
             return 0
         fi
         local key="$(head -1 <<< "${out[@]}")"
         case "$key" in
             (ctrl-p)
-                cd "$current_dir"
                 for file in "${(q)out[@]:1}"
                 do
-                    LBUFFER+="$HOME/dl/$file "
+                    LBUFFER+="${file} "
                 done
                 ;;
             (ctrl-o)
-                cd "$(dirname "$(readlink -e "${out[@]:1}")")"
+                cd "${${out[@]:1}%/*}"
                 ;;
             (*)
-                [[ -f "${out[1]}" ]] && ISFILE=1
                 touch "${out[@]}" && _file_opener "${out[@]}"
-                [[ $ISFILE ]] && cd $current_dir
                 ;;
         esac
         unset ISFILE
-        local ret=$?
-        return $ret
+        zle fzf-redraw-prompt
+        zle reset-prompt
 }
 zle -N fzf-downloads-widget
 bindkey '^O' fzf-downloads-widget
