@@ -3,7 +3,7 @@ fif() {
         echo "Need a string to search for!"
         return 1
     fi
-    rg --files-with-matches --no-messages "$1" | fzf --preview "rg --pretty --context 10 '$1' {}" | xargs subl
+    rg --files-with-matches --no-messages "$1" | fzf --prompt="${PWD/$HOME/~} " --preview "rg --pretty --context 10 '$1' {}" | xargs subl
     [ $PopUp ] && swaymsg "focus tiling; [app_id=^(subl|sublime_text|firefox)$ app_id=__focused__ workspace=^(3|2λ)$] fullscreen enable; [app_id=^PopUp$] scratchpad show"
     # [ $PopUp ] && swaymsg "focus tiling; [app_id=^PopUp$] scratchpad show"
     return 0
@@ -24,7 +24,7 @@ fzf-widget() {
     # this ensures that file paths with spaces are not interpreted as different files
     local IFS=$'\n'
     setopt localoptions pipefail no_aliases 2> /dev/null
-    local out=($(eval "${FZF_DEFAULT_COMMAND:-} --type f" | fzf --bind "alt-.:reload($FZF_DEFAULT_COMMAND --type d)" --tiebreak=index --expect=ctrl-o,ctrl-p))
+    local out=($(eval "${FZF_DEFAULT_COMMAND:-} --type f" | fzf --bind "alt-.:reload($FZF_DEFAULT_COMMAND --type d)" --tiebreak=index --expect=ctrl-o,ctrl-p --prompt="${PWD/$HOME/~} "))
     if [[ -z "$out" ]]; then
         zle redisplay
         return 0
@@ -56,7 +56,7 @@ fzf-downloads-widget() {
         # this ensures that file paths with spaces are not interpreted as different files
         local IFS=$'\n'
         setopt localoptions pipefail no_aliases 2> /dev/null
-        local out=($(ls --color=always -ctd1 ${XDG_DOWNLOAD_DIR}/* | fzf --tiebreak=index --delimiter=/ --with-nth=4.. --no-sort --ansi --expect=ctrl-o,ctrl-p))
+        local out=($(ls --color=always -ctd1 ${XDG_DOWNLOAD_DIR}/* | fzf --tiebreak=index --delimiter=/ --with-nth=4.. --no-sort --ansi --expect=ctrl-o,ctrl-p --prompt="${PWD/$HOME/~} "))
         if [[ -z "$out" ]]; then
             zle redisplay
             return 0
@@ -95,7 +95,7 @@ fzf-history-widget() {
     fi
 
     out=( $(fc -rnli 1 |
-                 FZF_DEFAULT_OPTS=" $FZF_DEFAULT_OPTS --expect=ctrl-/,ctrl-p,enter --delimiter='  ' --nth=2.. --preview-window=bottom:4 --preview 'echo {2..}' --no-hscroll --tiebreak=index --bind \"alt-w:execute-silent(wl-copy -- {2..})+abort\" --query=${myQuery}" fzf) )
+                 FZF_DEFAULT_OPTS=" $FZF_DEFAULT_OPTS --prompt='${PWD/$HOME/~} ' --expect=ctrl-/,ctrl-p,enter --delimiter='  ' --nth=2.. --preview-window=bottom:4 --preview 'echo {2..}' --no-hscroll --tiebreak=index --bind \"alt-w:execute-silent(wl-copy -- {2..})+abort\" --query=${myQuery}" fzf) )
     if [ -n "$out" ]; then
 
 
