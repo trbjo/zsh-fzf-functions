@@ -33,7 +33,7 @@ fzf-widget() {
     # we save it as an array instead of one string to be able to parse it as separate arguments
     case "$key" in
         (ctrl-p)
-        for file in "${(q)out[@]:1:a}"
+        for file in "${out[@]:1:a:q}"
         do
             LBUFFER+="${file} "
         done
@@ -47,7 +47,7 @@ fzf-widget() {
         _file_opener "${out[@]}"
         ;;
     esac
-    return
+    zle reset-prompt
 }
 zle     -N    fzf-widget
 bindkey '^P' fzf-widget
@@ -64,7 +64,7 @@ fzf-downloads-widget() {
         local key="$(head -1 <<< "${out[@]}")"
         case "$key" in
             (ctrl-p)
-                for file in "${(q)out[@]:1}"
+                for file in "${out[@]:1:q}"
                 do
                     LBUFFER+="${file} "
                 done
@@ -76,8 +76,7 @@ fzf-downloads-widget() {
                 touch "${out[@]}" && _file_opener "${out[@]}"
                 ;;
         esac
-        unset ISFILE
-        zle fzf-redraw-prompt
+        # zle fzf-redraw-prompt
         zle reset-prompt
 }
 zle -N fzf-downloads-widget
