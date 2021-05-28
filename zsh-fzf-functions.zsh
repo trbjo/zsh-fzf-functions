@@ -56,7 +56,7 @@ fzf-downloads-widget() {
         # this ensures that file paths with spaces are not interpreted as different files
         local IFS=$'\n'
         setopt localoptions pipefail no_aliases 2> /dev/null
-        local out=($(ls --color=always -ctd1 ${XDG_DOWNLOAD_DIR}/* | fzf --tiebreak=index --delimiter=/ --with-nth=4.. --no-sort --ansi --expect=ctrl-o,ctrl-p --prompt="${PWD/$HOME/~} "))
+        local out=($(ls --color=always -ctd1 ${XDG_DOWNLOAD_DIR}/* | fzf --tiebreak=index --delimiter=/ --with-nth=4.. --no-sort --ansi --expect=ctrl-o,ctrl-p --prompt="${XDG_DOWNLOAD_DIR/$HOME/~} "))
         if [[ -z "$out" ]]; then
             zle redisplay
             return 0
