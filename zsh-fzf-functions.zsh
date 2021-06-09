@@ -1,6 +1,6 @@
 fif() {
     if [ ! "$#" -gt 0 ]; then
-        echo "Need a string to search for!"
+        print "Need a string to search for!"
         return 1
     fi
     rg --files-with-matches --no-messages "$1" | fzf --prompt="${PWD/$HOME/~} " --preview "rg --pretty --context 10 '$1' {}" | xargs subl
