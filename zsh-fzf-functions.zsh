@@ -1,11 +1,9 @@
-fif() {
-    if [ ! "$#" -gt 0 ]; then
-        print "Need a string to search for!"
-        return 1
-    fi
-    rg --files-with-matches --no-messages "$1" | fzf --prompt="${PWD/$HOME/~} " --preview "rg --pretty --context 10 '$1' {}" | xargs subl
-    [ $PopUp ] && swaymsg "focus tiling; [app_id=^(subl|sublime_text|firefox)$ app_id=__focused__ workspace=^(3|2λ)$] fullscreen enable; [app_id=^PopUp$] scratchpad show"
-    # [ $PopUp ] && swaymsg "focus tiling; [app_id=^PopUp$] scratchpad show"
+alias fif='noglob _fif'
+_fif() {
+    [[ "$#" -eq 0 ]] && print "Need a string to search for!" && return 1
+    myQuery="$@"
+    out=($(rg --files-with-matches --no-messages "$myQuery" | fzf --color=prompt:regular:-1:underline --prompt="\"$myQuery\": ${PWD/$HOME/~} " --preview "rg --pretty --context 10 '$myQuery' {}"))
+   [[ -n $out ]] && swaymsg -q -- "[app_id=^PopUp$] move scratchpad; [app_id=^sublime_text$ title=.] focus; [app_id=^sublime_text$ workspace=^2$ title=.] fullscreen enable; exec /opt/sublime_text/sublime_text $out"
     return 0
 }
 
@@ -24,7 +22,7 @@ fzf-widget() {
     # this ensures that file paths with spaces are not interpreted as different files
     local IFS=$'\n'
     setopt localoptions pipefail no_aliases 2> /dev/null
-    local out=($(eval "${FZF_DEFAULT_COMMAND:-} --type f" | fzf --bind "alt-.:reload($FZF_DEFAULT_COMMAND --type d)" --tiebreak=index --expect=ctrl-o,ctrl-p --prompt="${PWD/$HOME/~} "))
+    local out=($(eval "${FZF_DEFAULT_COMMAND:-fd} --type f" | fzf --bind "alt-.:reload($FZF_DEFAULT_COMMAND --type d)" --tiebreak=index --expect=ctrl-o,ctrl-p --prompt="${PWD/$HOME/~} "))
     if [[ -z "$out" ]]; then
         zle redisplay
         return 0
@@ -76,7 +74,7 @@ fzf-downloads-widget() {
                 touch "${out[@]}" && _file_opener "${out[@]}"
                 ;;
         esac
-        # zle fzf-redraw-prompt
+        zle fzf-redraw-prompt
         zle reset-prompt
 }
 zle -N fzf-downloads-widget
