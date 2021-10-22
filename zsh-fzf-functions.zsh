@@ -23,7 +23,6 @@ fzf-widget() {
     setopt localoptions pipefail no_aliases 2> /dev/null
     local out=($(eval "${FZF_DEFAULT_COMMAND:-fd} --type f" | fzf --bind "alt-.:reload($FZF_DEFAULT_COMMAND --type d)" --tiebreak=index --expect=ctrl-o,ctrl-p --prompt="`printf '\x1b[36m'`${${PWD/#$HOME/~}//\//`printf '\x1b[37m'`/`printf '\x1b[36m'`}`printf '\x1b[0m'`${RO_DIR:+`printf '\x1b[38;5;18m'`$RO_DIR} "))
     if [[ -z "$out" ]]; then
-        zle reset-prompt
         return 0
     fi
     local key="$(head -1 <<< "${out[@]}")"
@@ -56,7 +55,6 @@ fzf-downloads-widget() {
         setopt localoptions pipefail no_aliases 2> /dev/null
         local out=($(ls --color=always -ctd1 ${XDG_DOWNLOAD_DIR}/* | fzf --tiebreak=index --delimiter=/ --with-nth=4.. --no-sort --ansi --expect=ctrl-o,ctrl-p --prompt="`printf '\x1b[36m'`${${XDG_DOWNLOAD_DIR/$HOME/~}//\//`printf '\x1b[37m'`/`printf '\x1b[36m'`}`printf '\x1b[0m'`${RO_DIR:+`printf '\x1b[38;5;18m'`$RO_DIR} "))
         if [[ -z "$out" ]]; then
-            zle reset-prompt
             return 0
         fi
         local key="$(head -1 <<< "${out[@]}")"
@@ -140,7 +138,6 @@ bindkey '^R' fzf-history-widget
 fzf-password() {
     /usr/bin/fd . --extension gpg --base-directory $HOME/.password-store | sed -e 's/.gpg$//' | sort | fzf --no-multi --preview-window=hidden --bind 'alt-w:abort+execute-silent@touch /tmp/clipman_ignore ; wl-copy -n -- $(pass {})@,enter:execute-silent@[ $PopUp ] && swaymsg "[app_id=^PopUp$] scratchpad show"; touch /tmp/clipman_ignore; wl-copy -n -- $(pass {})@+abort'
     rm /tmp/clipman_ignore
-    zle redisplay
     # (deleter &) > /dev/null 2>&1
 }
 zle -N fzf-password
@@ -149,7 +146,6 @@ bindkey -e '^K' fzf-password
 fzf-clipman() {
     clipman pick --max-items=2000 --print0 --tool=CUSTOM --tool-args="fzf --read0 --preview 'echo {+}' --bind 'ctrl-_:execute-silent(echo -E {} > /tmp/pw; clipman clear --tool=CUSTOM --print0 --tool-args=\"cat /tmp/pw\")+abort,enter:execute-silent(wl-copy -- {+}; [ $PopUp ] && swaymsg \"[app_id=^PopUp$] scratchpad show\"; [ $subl ] && subl --command paste_and_indent)+abort,alt-w:execute-silent(wl-copy -- {+}; swaymsg scratchpad show)+abort,esc:execute-silent([ $subl ] && swaymsg scratchpad show)+cancel'"
     rm -f /tmp/pw
-    # zle redisplay
 }
 zle -N fzf-clipman
 bindkey -e '^B' fzf-clipman
