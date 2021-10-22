@@ -10,7 +10,6 @@ _fif() {
 
 # Ensure precmds are run after cd
 fzf-redraw-prompt() {
-    print
     local precmd
     for precmd in $precmd_functions; do
         $precmd
@@ -24,6 +23,7 @@ fzf-widget() {
     setopt localoptions pipefail no_aliases 2> /dev/null
     local out=($(eval "${FZF_DEFAULT_COMMAND:-fd} --type f" | fzf --bind "alt-.:reload($FZF_DEFAULT_COMMAND --type d)" --tiebreak=index --expect=ctrl-o,ctrl-p --prompt="${PWD/$HOME/~} "))
     if [[ -z "$out" ]]; then
+        zle fzf-redraw-prompt
         zle redisplay
         return 0
     fi
@@ -39,6 +39,7 @@ fzf-widget() {
         ;;
         (ctrl-o)
         cd ${${out[@]:1:a}%/*}
+        print
         zle fzf-redraw-prompt
         ;;
         (*)
