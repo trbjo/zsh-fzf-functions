@@ -137,8 +137,6 @@ bindkey '^R' fzf-history-widget
 
 fzf-password() {
     /usr/bin/fd . --extension gpg --base-directory $HOME/.password-store | sed -e 's/.gpg$//' | sort | fzf --no-multi --preview-window=hidden --bind 'alt-w:abort+execute-silent@touch /tmp/clipman_ignore ; wl-copy -n -- $(pass {})@,enter:execute-silent@[ $PopUp ] && swaymsg "[app_id=^PopUp$] scratchpad show"; touch /tmp/clipman_ignore; wl-copy -n -- $(pass {})@+abort'
-    rm /tmp/clipman_ignore
-    # (deleter &) > /dev/null 2>&1
 }
 zle -N fzf-password
 bindkey -e '^K' fzf-password
