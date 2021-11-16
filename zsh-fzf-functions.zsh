@@ -125,16 +125,6 @@ zle -N fzf-history-widget
 bindkey '^R' fzf-history-widget
 
 
-
-
-
-
-# deleter() {
-    # local pw="$(wl-paste -n)"
-    # sleep 15
-    # clipman clear --tool=CUSTOM --print0 --tool-args="printf \"$pw\""
-# }
-
 fzf-password() {
     /usr/bin/fd . --extension gpg --base-directory $HOME/.password-store |\
      sed -e 's/.gpg$//' |\
