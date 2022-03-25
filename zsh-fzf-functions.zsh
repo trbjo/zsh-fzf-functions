@@ -93,6 +93,40 @@ fzf-downloads-widget() {
 zle -N fzf-downloads-widget
 bindkey '^O' fzf-downloads-widget
 
+# Paste the selected command(s) from history into the command line
+fzf-history-widget() {
+    local IFS=$'\n'
+    local out myQuery line REPLACE separator_var=";"
+    setopt localoptions noglobsubst noposixbuiltins pipefail no_aliases 2> /dev/null
+
+    if [[ ${LBUFFER: -3} != "&& " ]] && [[ ${LBUFFER: -2} != "; " ]] && [[ ${LBUFFER: -2} != "&&" ]] && [[ ${LBUFFER: -1} != ";" ]]; then
+        REPLACE=true
+        myQuery="${(qqq)LBUFFER}"
+    fi
+
+    out=( $(fc -rnli 1 | sed -r "s/^(................)/`printf '\033[4m'`\1`printf '\033[0m'`/" |
+                 FZF_DEFAULT_OPTS=" $FZF_DEFAULT_OPTS --prompt=\"`printf '\x1b[36m'`${${PWD/#$HOME/~}//\//`printf '\x1b[37m'`/`printf '\x1b[36m'`}`printf '\x1b[0m'`${RO_DIR:+`printf '\x1b[38;5;18m'`$RO_DIR} \" --expect=ctrl-/,ctrl-p,enter --delimiter='  ' --nth=2.. --preview-window=bottom:4 --preview 'echo {2..}' --no-hscroll --tiebreak=index --bind \"alt-w:execute-silent(wl-copy -- {2..})+abort\" --query=${myQuery}" fzf) )
+    if [ -n "$out" ]; then
+
+
+        if [[ ${LBUFFER: -2} == "&&" ]] || [[ ${LBUFFER: -1} == ";" ]]; then
+            LBUFFER+=' '
+        fi
+
+        key="${out[@]:0:1}"
+        if [[ "$key" == "ctrl-p" ]]; then
+            separator_var=" &&"
+        fi
+        [[ $REPLACE ]] && LBUFFER="${${out[@]:1:1}#*:[0-9][0-9]  }" || LBUFFER+="${${out[@]:1:1}#*:[0-9][0-9]  }"
+        for hist in "${out[@]:2}"; do
+            LBUFFER+="$separator_var ${hist#*:[0-9][0-9]  }"
+        done
+    fi
+    zle reset-prompt
+}
+zle -N fzf-history-widget
+bindkey '^R' fzf-history-widget
+
 fzf-password() {
     /usr/bin/fd . --extension gpg --base-directory $HOME/.password-store |\
      sed -e 's/.gpg$//' |\
