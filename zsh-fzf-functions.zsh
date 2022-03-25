@@ -1,3 +1,9 @@
+export FZF_DEFAULT_OPTS="--ansi --bind \"alt-t:page-down,alt-c:page-up,ctrl-e:replace-query,ctrl-b:toggle-all,change:top,alt-w:execute-silent(wl-copy -- {+})+abort,ctrl-/:execute-silent(rm -rf {+})+abort,ctrl-r:toggle-sort,ctrl-q:unix-line-discard\" --multi --inline-info --reverse --color=bg+:-1,info:-1,prompt:regular,pointer:5:regular,hl:4,hl+:6,fg+:12,border:19,marker:2:regular --prompt='  ' --marker=❯ --pointer=❯ --margin 0,0 --multi --preview-window=right:50%:sharp:wrap --preview 'if [[ {} =~ \"\.(jpeg|JPEG|jpg|JPG|png|webp|WEBP|PNG|gif|GIF|bmp|BMP|tif|TIF|tiff|TIFF)$\" ]]; then identify -ping -format \"%f\\n%m\\n%w x %h pixels\\n%b\\n\\n%l\\n%c\\n\" {} ; elif [[ {} =~ \"\.(svg|SVG)$\" ]]; then tiv -h \$FZF_PREVIEW_LINES -w \$FZF_PREVIEW_COLUMNS {}; elif [[ {} =~ \"\.(pdf|PDF)$\" ]]; then pdfinfo {}; elif [[ {} =~ \"\.(zip|ZIP|sublime-package)$\" ]]; then zip -sf {};  else bat --style=header,numbers --terminal-width=\$((\$FZF_PREVIEW_COLUMNS - 6)) --force-colorization --italic-text=always --line-range :70 {} 2>/dev/null || exa -T -L 2 --color=always --long {}; fi'"
+
+if [[ $commands[fd] ]]; then
+        export FZF_DEFAULT_COMMAND="/usr/bin/fd --color always --exclude gi --exclude \*.dll --exclude node_modules --exclude bin --exclude obj --exclude \*.out --exclude lib --exclude \*.srt --exclude \*.exe"
+fi
+
 alias fif='noglob _fif'
 _fif() {
     [[ "$#" -eq 0 ]] && print "Need a string to search for!" && return 1
@@ -86,53 +92,6 @@ fzf-downloads-widget() {
 }
 zle -N fzf-downloads-widget
 bindkey '^O' fzf-downloads-widget
-
-# Paste the selected command(s) from history into the command line
-fzf-history-widget() {
-    local IFS=$'\n'
-    local out myQuery line REPLACE separator_var=";"
-    setopt localoptions noglobsubst noposixbuiltins pipefail no_aliases 2> /dev/null
-
-    if [[ ${LBUFFER: -3} != "&& " ]] && [[ ${LBUFFER: -2} != "; " ]] && [[ ${LBUFFER: -2} != "&&" ]] && [[ ${LBUFFER: -1} != ";" ]]; then
-        REPLACE=true
-        myQuery="${(qqq)LBUFFER}"
-    fi
-
-    out=( $(fc -rnli 1 | sed -r "s/^(................)/`printf '\033[4m'`\1`printf '\033[0m'`/" |
-                 FZF_DEFAULT_OPTS=" $FZF_DEFAULT_OPTS --prompt=\"`printf '\x1b[36m'`${${PWD/#$HOME/~}//\//`printf '\x1b[37m'`/`printf '\x1b[36m'`}`printf '\x1b[0m'`${RO_DIR:+`printf '\x1b[38;5;18m'`$RO_DIR} \" --expect=ctrl-/,ctrl-p,enter --delimiter='  ' --nth=2.. --preview-window=bottom:4 --preview 'echo {2..}' --no-hscroll --tiebreak=index --bind \"alt-w:execute-silent(wl-copy -- {2..})+abort\" --query=${myQuery}" fzf) )
-    if [ -n "$out" ]; then
-
-
-        if [[ ${LBUFFER: -2} == "&&" ]] || [[ ${LBUFFER: -1} == ";" ]]; then
-            LBUFFER+=' '
-        fi
-
-        key="${out[@]:0:1}"
-        if [[ "$key" == "ctrl-p" ]]; then
-            separator_var=" &&"
-        fi
-        # if [[ "$key" == "ctrl-/" ]]; then
-        #     for hist in "${out[@]:1}"
-        #     do
-        #         line=$(rg --no-config --line-number --fixed-strings "${hist#*  }" $HISTFILE | cut -f1 -d:)
-        #         echo $line
-        #         awk -v n=$line 'NR == n {next}' $HISTFILE
-        #     done
-        #     fc -R
-        #     # LBUFFER+="${${out[@]:1:1}#*  }"
-        # else
-            [[ $REPLACE ]] && LBUFFER="${${out[@]:1:1}#*:[0-9][0-9]  }" || LBUFFER+="${${out[@]:1:1}#*:[0-9][0-9]  }"
-            for hist in "${out[@]:2}"
-            do
-                LBUFFER+="$separator_var ${hist#*:[0-9][0-9]  }"
-            done
-        # fi
-    fi
-    zle reset-prompt
-}
-zle -N fzf-history-widget
-bindkey '^R' fzf-history-widget
-
 
 fzf-password() {
     /usr/bin/fd . --extension gpg --base-directory $HOME/.password-store |\
