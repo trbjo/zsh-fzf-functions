@@ -59,7 +59,7 @@ fzf-downloads-widget() {
         # this ensures that file paths with spaces are not interpreted as different files
         local IFS=$'\n'
         setopt localoptions pipefail no_aliases 2> /dev/null
-        local out=($(ls --color=always -ctd1 ${XDG_DOWNLOAD_DIR}/* | fzf --tiebreak=index --delimiter=/ --with-nth=4.. --no-sort --ansi --expect=ctrl-o,ctrl-p --prompt="`printf '\x1b[36m'`${${XDG_DOWNLOAD_DIR/$HOME/~}//\//`printf '\x1b[37m'`/`printf '\x1b[36m'`} "))
+        local out=($(ls --color=always -ctd1 ${XDG_DOWNLOAD_DIR}/* | fzf --preview-window=right:68% --tiebreak=index --delimiter=/ --with-nth=4.. --no-sort --ansi --expect=ctrl-o,ctrl-p --prompt="`printf '\x1b[36m'`${${XDG_DOWNLOAD_DIR/$HOME/~}//\//`printf '\x1b[37m'`/`printf '\x1b[36m'`} "))
         if [[ -z "$out" ]]; then
             return 0
         fi
