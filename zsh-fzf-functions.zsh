@@ -10,7 +10,7 @@ _fif() {
     local IFS=$'\n'
     setopt localoptions pipefail no_aliases 2> /dev/null
     local myQuery="$@"
-    out=($(rg --files-with-matches --no-messages "$myQuery" | fzf --expect=ctrl-p --color=prompt:regular:-1:underline --prompt="\"$myQuery\": ${PWD/$HOME/~} " --preview "rg --pretty --context 10 '$myQuery' {}"))
+    local out=($(rg --files-with-matches --no-messages "$myQuery" | fzf --expect=ctrl-p --color=prompt:regular:-1:underline --prompt="\"$myQuery\": ${PWD/$HOME/~} " --preview "rg --pretty --context 10 '$myQuery' {}"))
     if [[ -z "$out" ]]; then
         return 0
     fi
@@ -119,7 +119,7 @@ fzf-history-widget() {
         myQuery="${(qqq)LBUFFER}"
     fi
 
-    out=( $(fc -rnli 1 | sed -r "s/^(................)/`printf '\033[4m'`\1`printf '\033[0m'`/" |
+    local out=( $(fc -rnli 1 | sed -r "s/^(................)/`printf '\033[4m'`\1`printf '\033[0m'`/" |
                  FZF_DEFAULT_OPTS=" $FZF_DEFAULT_OPTS --prompt=\"`printf '\x1b[36m'`${${PWD/#$HOME/~}//\//`printf '\x1b[37m'`/`printf '\x1b[36m'`}`printf '\x1b[0m'`${RO_DIR:+`printf '\x1b[38;5;18m'`$RO_DIR} \" --expect=ctrl-/,ctrl-p,enter --delimiter='  ' --nth=2.. --preview-window=bottom:4 --preview 'echo {2..}' --no-hscroll --tiebreak=index --bind \"alt-w:execute-silent(wl-copy -- {2..})+abort\" --query=${myQuery}" fzf) )
     if [ -n "$out" ]; then
 
