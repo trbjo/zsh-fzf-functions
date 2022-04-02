@@ -7,10 +7,25 @@ fi
 alias fif='noglob _fif'
 _fif() {
     [[ "$#" -eq 0 ]] && print "Need a string to search for!" && return 1
-    myQuery="$@"
-    out=($(rg --files-with-matches --no-messages "$myQuery" | fzf --color=prompt:regular:-1:underline --prompt="\"$myQuery\": ${PWD/$HOME/~} " --preview "rg --pretty --context 10 '$myQuery' {}"))
-   [[ -n $out ]] && swaymsg -q -- "[app_id=^PopUp$] move scratchpad; [app_id=^sublime_text$ title=.] focus; exec /opt/sublime_text/sublime_text $out"
-    return 0
+    local IFS=$'\n'
+    setopt localoptions pipefail no_aliases 2> /dev/null
+    local myQuery="$@"
+    out=($(rg --files-with-matches --no-messages "$myQuery" | fzf --expect=ctrl-p --color=prompt:regular:-1:underline --prompt="\"$myQuery\": ${PWD/$HOME/~} " --preview "rg --pretty --context 10 '$myQuery' {}"))
+    if [[ -z "$out" ]]; then
+        return 0
+    fi
+
+   local key="$(head -1 <<< "${out[@]}")"
+   case "$key" in
+       (ctrl-p)
+       swaymsg -q -- "exec /opt/sublime_text/sublime_text --command close_all"
+       swaymsg -q -- "[app_id=^PopUp$] move scratchpad; [app_id=^sublime_text$ title=.] focus; exec /opt/sublime_text/sublime_text ${out[@]:1:A}"
+       ;;
+       (*)
+       swaymsg -q -- "[app_id=^PopUp$] move scratchpad; [app_id=^sublime_text$ title=.] focus; exec /opt/sublime_text/sublime_text ${out[@]}"
+       ;;
+   esac
+   return 0
 }
 
 
