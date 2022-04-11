@@ -163,7 +163,7 @@ fi
 
 if type clipman > /dev/null 2>&1; then
 fzf-clipman() {
-    clipman pick --max-items=2000 --print0 --tool=CUSTOM --tool-args="fzf --read0 --preview 'echo {+}' --bind 'ctrl-_:execute-silent(echo -E {} > /tmp/pw; clipman clear --tool=CUSTOM --print0 --tool-args=\"cat /tmp/pw\")+abort,enter:execute-silent(wl-copy -- {+}; [ $PopUp ] && swaymsg \"[app_id=^PopUp$] scratchpad show\"; [ $subl ] && subl --command smart_paste)+abort,alt-w:execute-silent(wl-copy -- {+}; swaymsg scratchpad show)+abort,esc:execute-silent([ $subl ] && swaymsg scratchpad show)+cancel'"
+    clipman pick --max-items=2000 --print0 --tool=CUSTOM --tool-args="fzf --exact --read0 --preview 'echo {+}' --bind 'ctrl-_:execute-silent(echo -E {} > /tmp/pw; clipman clear --tool=CUSTOM --print0 --tool-args=\"cat /tmp/pw\")+abort,enter:execute-silent(wl-copy -- {+}; [ $PopUp ] && swaymsg \"[title=^PopUp$] scratchpad show\"; [ $subl ] && /opt/sublime_text/sublime_text --command smart_paste)+abort,alt-w:execute-silent(wl-copy -- {+}; swaymsg scratchpad show)+abort,esc:execute-silent([ $subl ] && swaymsg scratchpad show)+cancel'"
     rm -f /tmp/pw
 }
 zle -N fzf-clipman
