@@ -10,7 +10,7 @@ fzf-history-widget() {
     fi
 
     local out=( $(fc -rnli 1 | sed -r "s/^(................)/`printf '\033[4m'`\1`printf '\033[0m'`/" |
-                 FZF_DEFAULT_OPTS=" $FZF_DEFAULT_OPTS --prompt=\"`printf '\x1b[36m'`${${PWD/#$HOME/~}//\//`printf '\x1b[37m'`/`printf '\x1b[36m'`}`printf '\x1b[0m'`${_read_only_dir:+`printf '\x1b[38;5;18m'`$_read_only_dir} \" --expect=ctrl-/,ctrl-p,enter --delimiter='  ' --nth=2.. --preview-window=bottom:4 --preview 'echo {2..}' --no-hscroll --tiebreak=index --bind \"alt-w:execute-silent(wl-copy -- {2..})+abort\" --query=${myQuery}" fzf) )
+                 FZF_DEFAULT_OPTS=" $FZF_DEFAULT_OPTS --prompt=\"$(print -Pn ${(e)PROMPT:0:-156}) \" --expect=ctrl-/,ctrl-p,enter --delimiter='  ' --nth=2.. --preview-window=bottom:4 --preview 'echo {2..}' --no-hscroll --tiebreak=index --bind \"alt-w:execute-silent(wl-copy -- {2..})+abort\" --query=${myQuery}" fzf) )
     if [ -n "$out" ]; then
 
 
@@ -48,7 +48,7 @@ _fif() {
     local IFS=$'\n'
     setopt localoptions pipefail no_aliases 2> /dev/null
     local myQuery="$@"
-    local out=($(rg --files-with-matches --no-messages "$myQuery" | fzf --expect=ctrl-p --color=prompt:regular:-1:underline --prompt="\"$myQuery\": ${PWD/$HOME/~} " --preview "rg --pretty --context 10 '$myQuery' {}"))
+    local out=($(rg --files-with-matches --no-messages "$myQuery" | fzf --expect=ctrl-p --prompt="$(print -Pn "${(e)PROMPT:0:-156} \e[3m$myQuery\e[0m") " --preview "rg $RIPGREP_OPTS --pretty --context 10 '$myQuery' {}"))
     if [[ -z "$out" ]]; then
         return 0
     fi
@@ -81,7 +81,7 @@ fzf-widget() {
     # this ensures that file paths with spaces are not interpreted as different files
     local IFS=$'\n'
     setopt localoptions pipefail no_aliases 2> /dev/null
-    local out=($(eval "${FZF_DEFAULT_COMMAND:-fd} --type f" | fzf --bind "alt-.:reload($FZF_DEFAULT_COMMAND --type d)" --tiebreak=index --expect=ctrl-o,ctrl-p --prompt="`printf '\x1b[36m'`${${PWD/#$HOME/~}//\//`printf '\x1b[37m'`/`printf '\x1b[36m'`}`printf '\x1b[0m'`${RO_DIR:+`printf '\x1b[38;5;18m'`$RO_DIR} "))
+    local out=($(eval "${FZF_DEFAULT_COMMAND:-fd} --type f" | fzf --delimiter=/ --with-nth=2.. --bind "alt-.:reload($FZF_DEFAULT_COMMAND --type d)" --tiebreak=index --expect=ctrl-o,ctrl-p --prompt="$(print -Pn ${(e)PROMPT:0:-156}) "))
     if [[ -z "$out" ]]; then
         return 0
     fi
@@ -114,7 +114,7 @@ fzf-downloads-widget() {
         # this ensures that file paths with spaces are not interpreted as different files
         local IFS=$'\n'
         setopt localoptions pipefail no_aliases 2> /dev/null
-        local out=($(ls --color=always -ctd1 ${XDG_DOWNLOAD_DIR}/* | fzf --preview-window=right:68% --tiebreak=index --delimiter=/ --with-nth=4.. --no-sort --ansi --expect=ctrl-o,ctrl-p --prompt="`printf '\x1b[36m'`${${XDG_DOWNLOAD_DIR/$HOME/~}//\//`printf '\x1b[37m'`/`printf '\x1b[36m'`} "))
+        local out=($(ls --color=always -ctd1 ${(q)XDG_DOWNLOAD_DIR}/* | fzf --preview-window=right:68% --tiebreak=index --delimiter=/ --with-nth=5.. --no-sort --ansi --expect=ctrl-o,ctrl-p --prompt="$(cd $XDG_DOWNLOAD_DIR; print -Pn ${(e)PROMPT:0:-156}) "))
         if [[ -z "$out" ]]; then
             return 0
         fi
