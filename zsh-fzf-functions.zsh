@@ -101,7 +101,7 @@ fzf-widget() {
         zle fzf-redraw-prompt
         ;;
         (*)
-        _file_opener "${out[@]}"
+        file_opener "${out[@]}"
         ;;
     esac
     zle reset-prompt
@@ -132,7 +132,7 @@ fzf-downloads-widget() {
             (*)
                 local oldpwd="$PWD"
                 cd "${XDG_DOWNLOAD_DIR}"
-                touch "${out[@]}" && _file_opener "${out[@]}"
+                touch "${out[@]}" && file_opener "${out[@]}"
                 if [[ "${#out[@]}" -eq 1 ]] && [[ -f "${out[1]}" ]] && [[ "${out[1]:e}" =~ "${_ZSH_FILE_OPENER_ARCHIVE_FORMATS//,/|}" ]]; then
                     :
                 elif [[ "${#out[@]}" -eq 1 ]] && [[ -d "${out[1]}" ]]; then
