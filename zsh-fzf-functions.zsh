@@ -167,5 +167,5 @@ fzf-clipman() {
     rm -f /tmp/pw
 }
 zle -N fzf-clipman
-bindkey -e '^B' fzf-clipman
+# bindkey -e '^B' fzf-clipman
 fi
