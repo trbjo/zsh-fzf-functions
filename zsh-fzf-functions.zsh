@@ -109,45 +109,65 @@ fzf-widget() {
 zle     -N    fzf-widget
 bindkey '^P' fzf-widget
 
-if [[ $XDG_DOWNLOAD_DIR ]]; then
-fzf-downloads-widget() {
-        # this ensures that file paths with spaces are not interpreted as different files
-        local IFS=$'\n'
-        setopt localoptions pipefail no_aliases 2> /dev/null
-        local out=($(ls --color=always -ctd1 ${(q)XDG_DOWNLOAD_DIR}/* | fzf --preview-window=right:68% --tiebreak=index --delimiter=/ --with-nth=5.. --no-sort --ansi --expect=ctrl-o,ctrl-p --prompt="$(cd $XDG_DOWNLOAD_DIR; print -Pn ${PROMPT:0:84}) "))
-        if [[ -z "$out" ]]; then
-            return 0
-        fi
-        local key="$(head -1 <<< "${out[@]}")"
-        case "$key" in
-            (ctrl-p)
-                for file in "${out[@]:1:q}"
-                do
-                    LBUFFER+="${file} "
-                done
-                ;;
-            (ctrl-o)
-                cd "${${out[@]:1}%/*}"
-                ;;
-            (*)
-                local oldpwd="$PWD"
-                cd "${XDG_DOWNLOAD_DIR}"
-                touch "${out[@]}" && file_opener "${out[@]}"
-                if [[ "${#out[@]}" -eq 1 ]] && [[ -f "${out[1]}" ]] && [[ "${out[1]:e}" =~ "${_ZSH_FILE_OPENER_ARCHIVE_FORMATS//,/|}" ]]; then
-                    :
-                elif [[ "${#out[@]}" -eq 1 ]] && [[ -d "${out[1]}" ]]; then
-                    :
-                else
-                    cd "$oldpwd"
+() {
+    # we locale the download directory
+    case $OSTYPE in
+         (darwin*)
+            DL_DIR="$HOME/Downloads"
+            ;;
+        (linux-gnu)
+            while read line
+            do
+                if [[ $line == XDG_DOWNLOAD_DIR* ]]; then
+                    DL_DIR=${(P)line##*=}
+                    break
                 fi
-                ;;
-        esac
-        zle fzf-redraw-prompt
-        zle reset-prompt
+            done < "${XDG_CONFIG_HOME:-$HOME/.config}/user-dirs.dirs"
+            ;;
+         (*)
+            print "Your platform is not supported. Please open an issue"
+            return 1
+            ;;
+    esac
+    [[ -z $DL_DIR ]] && return
+    fzf-downloads-widget() {
+            # this ensures that file paths with spaces are not interpreted as different files
+            local IFS=$'\n'
+            setopt localoptions pipefail no_aliases 2> /dev/null
+            local out=($(ls --color=always -ctd1 ${(q)DL_DIR}/* | fzf --preview-window=right:68% --tiebreak=index --delimiter=/ --with-nth=5.. --no-sort --ansi --expect=ctrl-o,ctrl-p --prompt="$(cd $DL_DIR; print -Pn ${PROMPT:0:84}) "))
+            if [[ -z "$out" ]]; then
+                return 0
+            fi
+            local key="$(head -1 <<< "${out[@]}")"
+            case "$key" in
+                (ctrl-p)
+                    for file in "${out[@]:1:q}"
+                    do
+                        LBUFFER+="${file} "
+                    done
+                    ;;
+                (ctrl-o)
+                    cd "${${out[@]:1}%/*}"
+                    ;;
+                (*)
+                    local oldpwd="$PWD"
+                    cd "${DL_DIR}"
+                    touch "${out[@]}" && file_opener "${out[@]}"
+                    if [[ "${#out[@]}" -eq 1 ]] && [[ -f "${out[1]}" ]] && [[ "${out[1]:e}" =~ "${_ZSH_FILE_OPENER_ARCHIVE_FORMATS//,/|}" ]]; then
+                        :
+                    elif [[ "${#out[@]}" -eq 1 ]] && [[ -d "${out[1]}" ]]; then
+                        :
+                    else
+                        cd "$oldpwd"
+                    fi
+                    ;;
+            esac
+            zle fzf-redraw-prompt
+            zle reset-prompt
+    }
+    zle -N fzf-downloads-widget
+    bindkey '^O' fzf-downloads-widget
 }
-zle -N fzf-downloads-widget
-bindkey '^O' fzf-downloads-widget
-fi
 
 
 if type pass > /dev/null 2>&1; then
