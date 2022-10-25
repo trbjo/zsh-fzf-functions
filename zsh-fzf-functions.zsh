@@ -101,7 +101,7 @@ fzf-widget() {
         zle fzf-redraw-prompt
         ;;
         (*)
-        file_opener "${out[@]}"
+        file_opener <<< "${out[@]}"
         ;;
     esac
     zle reset-prompt
@@ -152,7 +152,7 @@ bindkey '^P' fzf-widget
                 (*)
                     local oldpwd="$PWD"
                     cd "${DL_DIR}"
-                    touch "${out[@]}" && file_opener "${out[@]}"
+                    touch "${out[@]}" && file_opener <<< ${out[@]}
                     if [[ "${#out[@]}" -eq 1 ]] && [[ -f "${out[1]}" ]] && [[ "${out[1]:e}" =~ "${_ZSH_FILE_OPENER_ARCHIVE_FORMATS//,/|}" ]]; then
                         :
                     elif [[ "${#out[@]}" -eq 1 ]] && [[ -d "${out[1]}" ]]; then
@@ -178,7 +178,7 @@ fzf-password() {
      fzf --no-multi --preview-window=hidden --bind 'alt-w:abort+execute-silent@touch /tmp/clipman_ignore ; wl-copy -n -- $(pass {})@,enter:execute-silent@ if [[ $PopUp ]]; then swaymsg "[app_id=^PopUp$] scratchpad show"; fi; touch /tmp/clipman_ignore; wl-copy -n -- $(pass {})@+abort'
 }
 zle -N fzf-password
-# bindkey -e '^K' fzf-password
+bindkey -e '^K' fzf-password
 fi
 
 if type clipman > /dev/null 2>&1; then
@@ -187,5 +187,5 @@ fzf-clipman() {
     rm -f /tmp/pw
 }
 zle -N fzf-clipman
-# bindkey -e '^B' fzf-clipman
+bindkey -e '^B' fzf-clipman
 fi
