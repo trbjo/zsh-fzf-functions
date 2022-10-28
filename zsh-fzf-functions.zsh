@@ -1,6 +1,7 @@
 # Paste the selected command(s) from history into the command line
 fzf-history-widget() {
     local IFS=$'\n'
+    local NEWLINE=$'\n'
     local out myQuery line REPLACE separator_var=";"
     setopt localoptions noglobsubst noposixbuiltins pipefail no_aliases 2> /dev/null
 
@@ -22,8 +23,9 @@ fzf-history-widget() {
         if [[ "$key" == "ctrl-p" ]]; then
             separator_var=" &&"
         fi
-        [[ $REPLACE ]] && LBUFFER="${${out[@]:1:1}#*:[0-9][0-9]  }" || LBUFFER+="${${out[@]:1:1}#*:[0-9][0-9]  }"
+        [[ $REPLACE ]] && LBUFFER="${${${out[@]:1:1}#*:[0-9][0-9]  }//\\n/$NEWLINE}" || LBUFFER+="${${${out[@]:1:1}#*:[0-9][0-9]  }//\\n/lol}"
         for hist in "${out[@]:2}"; do
+            hist=${hist//\\n/$NEWLINE}}
             LBUFFER+="$separator_var ${hist#*:[0-9][0-9]  }"
         done
     fi
