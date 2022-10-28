@@ -11,7 +11,7 @@ fzf-history-widget() {
     fi
 
     local out=( $(fc -rnli 1 | sed -r "s/^(................)/`printf '\033[4m'`\1`printf '\033[0m'`/" |
-                 FZF_DEFAULT_OPTS=" $FZF_DEFAULT_OPTS --no-sort --prompt=\"$(print -Pn ${PROMPT:0:130}) \" --expect=ctrl-/,ctrl-p,enter --delimiter='  ' --nth=2.. --preview-window=bottom:4 --preview 'echo {2..}' --no-hscroll --tiebreak=index --bind \"alt-w:execute-silent(wl-copy -- {2..})+abort\" --query=${myQuery}" fzf) )
+                 FZF_DEFAULT_OPTS=" $FZF_DEFAULT_OPTS --no-sort --prompt=\"$(print -Pn ${PROMPT:0:130}) \" --expect=ctrl-/,ctrl-p,enter --delimiter='  ' --nth=2.. --preview-window=bottom:5 --preview 'echo {2..}' --no-hscroll --tiebreak=index --bind \"alt-w:execute-silent(wl-copy -- {2..})+abort\" --query=${myQuery}" fzf) )
     if [ -n "$out" ]; then
 
 
