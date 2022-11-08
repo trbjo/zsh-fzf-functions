@@ -83,7 +83,7 @@ fzf-widget() {
     # this ensures that file paths with spaces are not interpreted as different files
     local IFS=$'\n'
     setopt localoptions pipefail no_aliases 2> /dev/null
-    local out=($(eval "${FZF_DEFAULT_COMMAND:-fd} --type f" | fzf --delimiter=/ --with-nth=2.. --bind "alt-.:reload($FZF_DEFAULT_COMMAND --type d)" --tiebreak=index --expect=ctrl-o,ctrl-p --prompt="$(print -Pn ${PROMPT:0:130}) "))
+    local out=($(eval "${FZF_DEFAULT_COMMAND:-fd} --type f" | fzf --bind "alt-.:reload($FZF_DEFAULT_COMMAND --type d)" --tiebreak=index --expect=ctrl-o,ctrl-p --prompt="$(print -Pn ${PROMPT:0:130}) "))
     if [[ -z "$out" ]]; then
         return 0
     fi
