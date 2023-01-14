@@ -23,9 +23,9 @@ fzf-history-widget() {
         if [[ "$key" == "ctrl-p" ]]; then
             separator_var=" &&"
         fi
-        [[ $REPLACE ]] && LBUFFER="${${${out[@]:1:1}#*:[0-9][0-9]  }//\\n/$NEWLINE}" || LBUFFER+="${${${out[@]:1:1}#*:[0-9][0-9]  }//\\n/lol}"
+        [[ $REPLACE ]] && LBUFFER="${${${out[@]:1:1}#*:[0-9][0-9]  }//\\n/$NEWLINE}" || LBUFFER+="${${${out[@]:1:1}#*:[0-9][0-9]  }//\\n/$NEWLINE}"
         for hist in "${out[@]:2}"; do
-            hist=${hist//\\n/$NEWLINE}}
+            hist=${hist//\\n/$NEWLINE}
             LBUFFER+="$separator_var ${hist#*:[0-9][0-9]  }"
         done
     fi
