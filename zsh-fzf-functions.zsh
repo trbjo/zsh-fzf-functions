@@ -136,7 +136,7 @@ bindkey '^P' fzf-widget
             # this ensures that file paths with spaces are not interpreted as different files
             local IFS=$'\n'
             setopt localoptions pipefail no_aliases 2> /dev/null
-            local out=($(ls --color=always -ctd1 ${(q)DL_DIR}/* | fzf --preview-window=right:68% --tiebreak=index --delimiter=/ --with-nth=5.. --no-sort --ansi --expect=ctrl-o,ctrl-p --prompt="$(cd $DL_DIR; print -Pn ${PROMPT:0:130}) "))
+            local out=($(ls --color=always -ctd1 ${(q)DL_DIR}/* | fzf --preview-window=right:68% --tiebreak=index --delimiter=/ --with-nth=5.. --no-sort --ansi --expect=ctrl-o,ctrl-p --prompt="$(_colorizer_abs_path $XDG_DOWNLOAD_DIR) "))
             if [[ -z "$out" ]]; then
                 return 0
             fi
@@ -152,16 +152,10 @@ bindkey '^P' fzf-widget
                     cd "${${out[@]:1}%/*}"
                     ;;
                 (*)
-                    local oldpwd="$PWD"
-                    cd "${DL_DIR}"
-                    touch "${out[@]}" && file_opener <<< ${out[@]}
                     if [[ "${#out[@]}" -eq 1 ]] && [[ -f "${out[1]}" ]] && [[ "${out[1]:e}" =~ "${_ZSH_FILE_OPENER_ARCHIVE_FORMATS//,/|}" ]]; then
-                        :
-                    elif [[ "${#out[@]}" -eq 1 ]] && [[ -d "${out[1]}" ]]; then
-                        :
-                    else
-                        cd "$oldpwd"
+                        cd "${DL_DIR}"
                     fi
+                    touch "${out[@]}" && file_opener <<< ${out[@]}
                     ;;
             esac
             zle fzf-redraw-prompt
