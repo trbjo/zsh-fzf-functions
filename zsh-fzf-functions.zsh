@@ -174,7 +174,6 @@ fzf-password() {
      fzf --no-multi --preview-window=hidden --bind 'alt-w:abort+execute-silent@touch /tmp/clipman_ignore ; wl-copy -n -- $(pass {})@,enter:execute-silent@ if [[ $PopUp ]]; then swaymsg "[app_id=^PopUp$] scratchpad show"; fi; touch /tmp/clipman_ignore; wl-copy -n -- $(pass {})@+abort'
 }
 zle -N fzf-password
-bindkey -e '^K' fzf-password
 fi
 
 if type clipman > /dev/null 2>&1; then
@@ -183,5 +182,4 @@ fzf-clipman() {
     rm -f /tmp/pw
 }
 zle -N fzf-clipman
-bindkey -e '^B' fzf-clipman
 fi
