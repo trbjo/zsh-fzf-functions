@@ -59,10 +59,10 @@ _fif() {
    case "$key" in
        (ctrl-p)
        swaymsg -q -- "exec /opt/sublime_text/sublime_text --command close_all"
-       swaymsg -q -- "[app_id=^PopUp$] move scratchpad; [app_id=^sublime_text$ title=.] focus; exec /opt/sublime_text/sublime_text ${out[@]:1:A}"
+       swaymsg -q -- "[app_id=^PopUp$] move scratchpad; [app_id=^sublime_text$ title=.] focus; exec /opt/sublime_text/sublime_text ${(q)${out[@]:1:A}}"
        ;;
        (*)
-       swaymsg -q -- "[app_id=^PopUp$] move scratchpad; [app_id=^sublime_text$ title=.] focus; exec /opt/sublime_text/sublime_text ${out[@]}"
+       swaymsg -q -- "[app_id=^PopUp$] move scratchpad; [app_id=^sublime_text$ title=.] focus; exec /opt/sublime_text/sublime_text ${(q)out[@]:A}"
        ;;
    esac
    return 0
