@@ -11,10 +11,9 @@ fzf-history-widget() {
     fi
 
     local out=( $(fc -rnli 1 | sed -r "s/^(................)/`printf '\033[4m'`\1`printf '\033[0m'`/" |
-                 FZF_DEFAULT_OPTS=" $FZF_DEFAULT_OPTS --no-sort --prompt=\"$(print -Pn ${PROMPT:0:130}) \" --expect=ctrl-/,ctrl-p,enter --delimiter='  ' --nth=2.. --preview-window=bottom,30% --preview 'bat --style=plain  --color always --language bash <<< {2..}' --no-hscroll --tiebreak=index --bind \"alt-w:execute-silent(wl-copy -- {2..})+abort\" --query=${myQuery}" fzf) )
-    if [ -n "$out" ]; then
+                 FZF_DEFAULT_OPTS=" $FZF_DEFAULT_OPTS --no-sort --prompt=\"$(print -Pn ${PROMPT_PWD:-$PWD}) \" --expect=ctrl-/,ctrl-p,enter --delimiter='  ' --nth=2.. --preview-window=bottom,30% --preview 'bat --style=plain  --color always --language bash <<< {2..}' --no-hscroll --tiebreak=index --bind \"alt-w:execute-silent(wl-copy -- {2..})+abort\" --query=${myQuery}" fzf) )
 
-
+    if [[ -n "$out" ]]; then
         if [[ ${LBUFFER: -2} == "&&" ]] || [[ ${LBUFFER: -1} == ";" ]]; then
             LBUFFER+=' '
         fi
@@ -50,7 +49,7 @@ _fif() {
     local IFS=$'\n'
     setopt localoptions pipefail no_aliases 2> /dev/null
     local myQuery="$@"
-    local out=($(rg --files-with-matches --no-messages "$myQuery" | fzf --expect=ctrl-p --prompt="$(print -Pn "${PROMPT:0:84} \e[3m$myQuery\e[0m") " --preview "rg $RIPGREP_OPTS --pretty --context 10 '$myQuery' {}"))
+    local out=($(rg --files-with-matches --no-messages "$myQuery" | fzf --expect=ctrl-p --prompt="$(print -Pn "${PROMPT_PWD:-$PWD} \e[3m$myQuery\e[0m") " --preview "rg $RIPGREP_OPTS --pretty --context 10 '$myQuery' {}"))
     if [[ -z "$out" ]]; then
         return 0
     fi
@@ -83,7 +82,7 @@ fzf-widget() {
     # this ensures that file paths with spaces are not interpreted as different files
     local IFS=$'\n'
     setopt localoptions pipefail no_aliases 2> /dev/null
-    local out=($(eval "${FZF_DEFAULT_COMMAND:-fd} --type f" | fzf --bind "alt-.:reload($FZF_DEFAULT_COMMAND --type d)" --tiebreak=index --expect=ctrl-o,ctrl-p --prompt="$(print -Pn ${PROMPT:0:130}) "))
+    local out=($(eval "${FZF_DEFAULT_COMMAND:-fd} --type f" | fzf --bind "alt-.:reload($FZF_DEFAULT_COMMAND --type d)" --tiebreak=index --expect=ctrl-o,ctrl-p --prompt="$(print -Pn ${PROMPT_PWD:-$PWD}) "))
     if [[ -z "$out" ]]; then
         return 0
     fi
@@ -131,12 +130,12 @@ bindkey '^P' fzf-widget
             return 1
             ;;
     esac
-    [[ -z $DL_DIR ]] && return
+    [[ ! -z $DL_DIR ]] || return
     fzf-downloads-widget() {
             # this ensures that file paths with spaces are not interpreted as different files
             local IFS=$'\n'
             setopt localoptions pipefail no_aliases 2> /dev/null
-            local out=($(ls --color=always -ctd1 ${(q)DL_DIR}/* | fzf --preview-window=right:68% --tiebreak=index --delimiter=/ --with-nth=5.. --no-sort --ansi --expect=ctrl-o,ctrl-p --prompt="$(_colorizer_abs_path $XDG_DOWNLOAD_DIR) "))
+            local out=($(ls --color=always -ctd1 ${(q)DL_DIR}/* | fzf --preview-window=right:68% --tiebreak=index --delimiter=/ --with-nth=5.. --no-sort --ansi --expect=ctrl-o,ctrl-p --prompt="$(_colorizer_abs_path $DL_DIR) "))
             if [[ -z "$out" ]]; then
                 return 0
             fi
@@ -174,12 +173,4 @@ fzf-password() {
      fzf --no-multi --preview-window=hidden --bind 'alt-w:abort+execute-silent@touch /tmp/clipman_ignore ; wl-copy -n -- $(pass {})@,enter:execute-silent@ if [[ $PopUp ]]; then swaymsg "[app_id=^PopUp$] scratchpad show"; fi; touch /tmp/clipman_ignore; wl-copy -n -- $(pass {})@+abort'
 }
 zle -N fzf-password
-fi
-
-if type clipman > /dev/null 2>&1; then
-fzf-clipman() {
-    clipman pick --max-items=2000 --print0 --tool=CUSTOM --tool-args="fzf --exact --read0 --preview 'echo {+}' --bind 'ctrl-_:execute-silent(echo -E {} > /tmp/pw; clipman clear --tool=CUSTOM --print0 --tool-args=\"cat /tmp/pw\")+abort,enter:execute-silent(wl-copy -- {+}; [ $PopUp ] && swaymsg \"[title=^PopUp$] scratchpad show\"; [ $subl ] && /opt/sublime_text/sublime_text --command smart_paste)+abort,alt-w:execute-silent(wl-copy -- {+}; swaymsg scratchpad show)+abort,esc:execute-silent([ $subl ] && swaymsg scratchpad show)+cancel'"
-    rm -f /tmp/pw
-}
-zle -N fzf-clipman
 fi
