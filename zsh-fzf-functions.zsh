@@ -192,10 +192,14 @@ alias glo="\
         --preview='
         typeset -a args=(--hyperlinks --width=\$(( \$FZF_PREVIEW_COLUMNS - 2)));
         [[ \$FZF_PREVIEW_COLUMNS -lt 160 ]] || args+=--side-by-side
-        git show {1} | delta \$args' \
+        git show --color=always {1} | delta \$args' \
         --preview-window=bottom,50%,border-top"
 
-load='gs=$(git -c color.status=always status --short --untracked-files=all .); { rg "^\x1b\[32mM\x1b\[m " <<< $gs;  rg -v "^\x1b\[32mM\x1b\[m " <<< $gs }'
+load='gs=$(git -c color.status=always status --short --untracked-files=all .); { \
+       rg "^\x1b\[32mM\x1b\[m  " <<< $gs
+       rg "^\x1b\[32mM\x1b\[m\x1b\[31mM\x1b\[m " <<< $gs
+    rg -v "^\x1b\[32mM\x1b\[m" <<< $gs
+    }'
 
 resetterm=$'\033[2J\033[3J\033[H'
 cyan=$'\e[1;36;m'
