@@ -195,10 +195,11 @@ alias glo="\
         git show --color=always {1} | delta \$args' \
         --preview-window=bottom,50%,border-top"
 
-load='gs=$(git -c color.status=always status --short --untracked-files=all .); { \
+load='gs=$(git -c color.status=always status --short --untracked-files=all .)
+    {
        rg "^\x1b\[32mM\x1b\[m  " <<< $gs
        rg "^\x1b\[32mM\x1b\[m\x1b\[31mM\x1b\[m " <<< $gs
-    rg -v "^\x1b\[32mM\x1b\[m" <<< $gs
+    rg -v "^\x1b\[32mM\x1b\[m" <<< $gs &!
     }'
 
 resetterm=$'\033[2J\033[3J\033[H'
