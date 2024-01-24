@@ -174,3 +174,53 @@ fzf-password() {
 }
 zle -N fzf-password
 fi
+
+alias glo="\
+    git log \
+        --date=format-local:'%Y-%m-%d %H:%M' \
+        --pretty=format:'%C(red)%h %C(green)%cd%C(reset) %C(cyan)●%C(reset) %C(yellow)%an%C(reset) %C(cyan)●%C(reset) %s' \
+        --abbrev-commit \
+        --color=always | \
+    fzf \
+        --delimiter=' ' \
+        --no-sort \
+        --no-extended \
+        --with-nth=2.. \
+        --bind 'enter:become(echo -n {+1})' \
+        --bind 'ctrl-h:change-preview-window(down,75%|down,99%|hidden|down,50%)' \
+        --bind 'ctrl-b:put( ● )' \
+        --preview='
+        typeset -a args=(--hyperlinks --width=\$(( \$FZF_PREVIEW_COLUMNS - 2)));
+        [[ \$FZF_PREVIEW_COLUMNS -lt 160 ]] || args+=--side-by-side
+        git show {1} | delta \$args' \
+        --preview-window=bottom,50%,border-top"
+
+load='gs=$(git -c color.status=always status --short --untracked-files=all .); { rg "^\x1b\[32mM\x1b\[m " <<< $gs;  rg -v "^\x1b\[32mM\x1b\[m " <<< $gs }'
+
+resetterm=$'\033[2J\033[3J\033[H'
+cyan=$'\e[1;36;m'
+magenta=$'\e[0;35;m'
+white=$'\e[0;37;m'
+reset=$'\e[0;m'
+alias dirty="\
+    eval 'gitpath=\$cyan\${\$(git rev-parse --show-toplevel)##*/}\$white/\$(git rev-parse --show-prefix)\$reset'
+    $load | fzf \
+        --prompt=\"\$gitpath \${magenta}❯\$reset \" \
+        --delimiter=' ' \
+        --no-sort \
+        --no-extended \
+        --bind 'enter:become(echo -n {+-1})' \
+        --bind 'ctrl-a:execute-silent(git add {+-1})+reload($load)' \
+        --bind 'ctrl-c:execute-silent(git checkout {+-1})+reload($load)' \
+        --bind 'ctrl-r:execute-silent(git restore --staged {+-1})+reload($load)' \
+        --bind 'ctrl-n:execute(git add -p {+-1}; printf \"$resetterm\")+reload($load)' \
+        --bind 'ctrl-h:change-preview-window(down,75%|down,99%|hidden|down,50%)' \
+        --preview '
+        typeset -a args=(--hyperlinks --width=\$(( \$FZF_PREVIEW_COLUMNS - 2)));
+        [[ \$FZF_PREVIEW_COLUMNS -lt 160 ]] || args+=--side-by-side
+        if [[ {} == \"?*\" ]]; then
+                          git diff --no-index /dev/null {-1} | delta \$args;
+                      else
+                          git diff HEAD -- {-1} | delta \$args;
+                      fi;' \
+        --preview-window=bottom,50%,border-top"
