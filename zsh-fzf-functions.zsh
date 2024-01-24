@@ -38,7 +38,7 @@ export FZF_DEFAULT_OPTS="--ansi --bind \"alt-t:page-down,alt-c:page-up,ctrl-e:re
 # Do not load the rest if fd is not found
 
 if type fd > /dev/null 2>&1; then
-        export FZF_DEFAULT_COMMAND="/usr/bin/fd --color always --exclude gi --exclude \*.dll --exclude node_modules --exclude bin --exclude obj --exclude \*.out --exclude lib --exclude \*.srt --exclude \*.exe"
+        export FZF_DEFAULT_COMMAND="/usr/bin/fd --color always --exclude node_modules"
 fi
 
 
@@ -197,9 +197,9 @@ alias glo="\
 
 load='gs=$(git -c color.status=always status --short --untracked-files=all .)
     {
-       rg "^\x1b\[32mM\x1b\[m  " <<< $gs
-       rg "^\x1b\[32mM\x1b\[m\x1b\[31mM\x1b\[m " <<< $gs
-    rg -v "^\x1b\[32mM\x1b\[m" <<< $gs &!
+       rg "^\x1b\[32m.\x1b\[m  " <<< $gs
+       rg "^\x1b\[32m.\x1b\[m\x1b\[31m.\x1b\[m " <<< $gs
+    rg -v "^\x1b\[32m.\x1b\[m" <<< $gs &!
     }'
 
 resetterm=$'\033[2J\033[3J\033[H'
@@ -211,21 +211,22 @@ alias dirty="\
     eval 'gitpath=\$cyan\${\$(git rev-parse --show-toplevel)##*/}\$white/\$(git rev-parse --show-prefix)\$reset'
     $load | fzf \
         --prompt=\"\$gitpath \${magenta}❯\$reset \" \
-        --delimiter=' ' \
+        --delimiter='' \
+        --nth='4..' \
         --no-sort \
         --no-extended \
-        --bind 'enter:become(echo -n {+-1})' \
-        --bind 'ctrl-a:execute-silent(git add {+-1})+reload($load)' \
-        --bind 'ctrl-c:execute-silent(git checkout {+-1})+reload($load)' \
-        --bind 'ctrl-r:execute-silent(git restore --staged {+-1})+reload($load)' \
-        --bind 'ctrl-n:execute(git add -p {+-1}; printf \"$resetterm\")+reload($load)' \
+        --bind 'enter:become(echo -n {+4..})' \
+        --bind 'ctrl-a:execute-silent(git add {+4..})+reload($load)' \
+        --bind 'ctrl-c:execute-silent(git checkout {+4..})+reload($load)' \
+        --bind 'ctrl-r:execute-silent(git restore --staged {+4..})+reload($load)' \
+        --bind 'ctrl-n:execute(git add -p {+4..}; printf \"$resetterm\")+reload($load)' \
         --bind 'ctrl-h:change-preview-window(down,75%|down,99%|hidden|down,50%)' \
         --preview '
         typeset -a args=(--hyperlinks --width=\$(( \$FZF_PREVIEW_COLUMNS - 2)));
         [[ \$FZF_PREVIEW_COLUMNS -lt 160 ]] || args+=--side-by-side
         if [[ {} == \"?*\" ]]; then
-                          git diff --no-index /dev/null {-1} | delta \$args;
+                          git diff --no-index /dev/null {4..} | delta \$args;
                       else
-                          git diff HEAD -- {-1} | delta \$args;
+                          git diff HEAD -- {4..} | delta \$args;
                       fi;' \
         --preview-window=bottom,50%,border-top"
