@@ -39,12 +39,9 @@ alt-c:page-up,\
 ctrl-e:replace-query,\
 ctrl-b:toggle-all,\
 change:top,\
-alt-w:execute-silent(wl-copy -- {+})+abort,\
 ctrl-/:execute-silent(rm -rf {+})+abort,\
 ctrl-r:toggle-sort,\
 ctrl-q:unix-line-discard\" \
---multi \
---margin 0,0 \
 --multi \
 --preview-window=right:50%:sharp:wrap \
 --preview 'if [[ -d {} ]]
@@ -68,10 +65,8 @@ else bat \
     --italic-text=always \
     --line-range :70 {} 2>/dev/null; fi'"
 
-# Do not load the rest if fd is not found
-
 if type fd > /dev/null 2>&1; then
-        export FZF_DEFAULT_COMMAND="/usr/bin/fd --color always --exclude node_modules"
+    export FZF_DEFAULT_COMMAND="/usr/bin/fd --color always --exclude node_modules"
 fi
 
 
