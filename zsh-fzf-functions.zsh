@@ -33,7 +33,40 @@ fzf-history-widget() {
 zle -N fzf-history-widget
 bindkey '^R' fzf-history-widget
 
-export FZF_DEFAULT_OPTS="--ansi --bind \"alt-t:page-down,alt-c:page-up,ctrl-e:replace-query,ctrl-b:toggle-all,change:top,alt-w:execute-silent(wl-copy -- {+})+abort,ctrl-/:execute-silent(rm -rf {+})+abort,ctrl-r:toggle-sort,ctrl-q:unix-line-discard\" --multi --inline-info --reverse --color=bg+:-1,info:-1,prompt:regular:-1,pointer:5:regular,hl:4:underline,hl+:regular:4:underline,fg+:12:regular,border:19,marker:2:regular --prompt='  ' --marker=❯ --pointer=❯ --margin 0,0 --multi --preview-window=right:50%:sharp:wrap --preview 'if [[ -d {} ]]; then exa -T -L 2 --color=always --long {}; elif [[ {} =~ \"\.(jpeg|JPEG|jpg|JPG|png|webp|WEBP|PNG|gif|GIF|bmp|BMP|tif|TIF|tiff|TIFF)$\" ]]; then identify -ping -format \"%f\\n%m\\n%w x %h pixels\\n%b\\n\\n%l\\n%c\\n\" {} ; elif [[ {} =~ \"\.(svg|SVG)$\" ]]; then tiv -h \$FZF_PREVIEW_LINES -w \$FZF_PREVIEW_COLUMNS {}; elif [[ {} =~ \"\.(pdf|PDF)$\" ]]; then pdfinfo {}; elif [[ {} =~ \"\.(zip|ZIP|sublime-package)$\" ]]; then zip -sf {}; elif [[ {} =~ \"\.(json|JSON)$\" ]]; then jq --color-output < {}; else bat --style=header,numbers --terminal-width=\$((\$FZF_PREVIEW_COLUMNS - 6)) --force-colorization --italic-text=always --line-range :70 {} 2>/dev/null; fi'"
+export FZF_DEFAULT_OPTS="${FZF_DEFAULT_OPTS} \
+--bind \"alt-t:page-down,\
+alt-c:page-up,\
+ctrl-e:replace-query,\
+ctrl-b:toggle-all,\
+change:top,\
+alt-w:execute-silent(wl-copy -- {+})+abort,\
+ctrl-/:execute-silent(rm -rf {+})+abort,\
+ctrl-r:toggle-sort,\
+ctrl-q:unix-line-discard\" \
+--multi \
+--margin 0,0 \
+--multi \
+--preview-window=right:50%:sharp:wrap \
+--preview 'if [[ -d {} ]]
+    then
+        ls --color=always -l {}
+    elif [[ {} =~ \"\.(jpeg|JPEG|jpg|JPG|png|webp|WEBP|PNG|gif|GIF|bmp|BMP|tif|TIF|tiff|TIFF)$\" ]]
+    then
+        identify -ping -format \"%f\\n%m\\n%w x %h pixels\\n%b\\n\\n%l\\n%c\\n\" {}
+    elif [[ {} =~ \"\.(svg|SVG)$\" ]]
+    then tiv -h \$FZF_PREVIEW_LINES -w \$FZF_PREVIEW_COLUMNS {}
+    elif [[ {} =~ \"\.(pdf|PDF)$\" ]]
+    then pdfinfo {}
+    elif [[ {} =~ \"\.(zip|ZIP|sublime-package)$\" ]]
+    then zip -sf {}
+    elif [[ {} =~ \"(json|JSON)$\" ]]
+    then jq --indent 4 --color-output < {}
+else bat \
+    --style=header,numbers \
+    --terminal-width=\$((\$FZF_PREVIEW_COLUMNS - 6)) \
+    --force-colorization \
+    --italic-text=always \
+    --line-range :70 {} 2>/dev/null; fi'"
 
 # Do not load the rest if fd is not found
 
@@ -78,6 +111,12 @@ fzf-redraw-prompt() {
 }
 zle -N fzf-redraw-prompt
 
+alias myfzf="
+    fd --color always --exclude node_modules | \
+    fzf \
+        --bind 'ctrl-h:change-preview-window(right,75%|hidden|right,50%)' \
+        --preview-window=right,50%,border-left"
+
 fzf-widget() {
     # this ensures that file paths with spaces are not interpreted as different files
     local IFS=$'\n'
@@ -86,6 +125,8 @@ fzf-widget() {
     if [[ -z "$out" ]]; then
         return 0
     fi
+    xdg-open <<< $out
+    return
     local key="$(head -1 <<< "${out[@]}")"
     # we save it as an array instead of one string to be able to parse it as separate arguments
     case "$key" in
@@ -197,8 +238,7 @@ alias glo="\
 
 load='gs=$(git -c color.status=always status --short --untracked-files=all .)
     {
-       rg "^\x1b\[32m.\x1b\[m  " <<< $gs
-       rg "^\x1b\[32m.\x1b\[m\x1b\[31m.\x1b\[m " <<< $gs
+       rg "^\x1b\[32m.\x1b\[m" <<< $gs
     rg -v "^\x1b\[32m.\x1b\[m" <<< $gs &!
     }'
 
@@ -208,7 +248,7 @@ magenta=$'\e[0;35;m'
 white=$'\e[0;37;m'
 reset=$'\e[0;m'
 quote='\\\"'
-alias dirty="\
+alias gs="\
     eval 'gitpath=\$cyan\${\$(git rev-parse --show-toplevel)##*/}\$white/\$(git rev-parse --show-prefix)\$reset'
     $load | fzf \
         --prompt=\"\$gitpath \${magenta}❯\$reset \" \
