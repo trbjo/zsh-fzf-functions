@@ -111,41 +111,27 @@ fzf-redraw-prompt() {
 }
 zle -N fzf-redraw-prompt
 
-alias myfzf="
+alias myfzf="printf '\r\x1b[1A'
+    eval 'myp=\$(print -Pn \${PROMPT})'
     fd --color always --exclude node_modules | \
     fzf \
+        --prompt=\"\$myp\" \
         --bind 'ctrl-h:change-preview-window(right,75%|hidden|right,50%)' \
+        --bind 'esc:abort+execute(printf \"\x1b[1A\r\")' \
         --preview-window=right,50%,border-left"
 
+
+
 fzf-widget() {
-    # this ensures that file paths with spaces are not interpreted as different files
-    local IFS=$'\n'
-    setopt localoptions pipefail no_aliases 2> /dev/null
-    local out=($(eval "${FZF_DEFAULT_COMMAND:-fd} --type f" | fzf --bind "alt-.:reload($FZF_DEFAULT_COMMAND --type d)" --tiebreak=index --expect=ctrl-o,ctrl-p --prompt="$(print -Pn ${PROMPT_PWD:-$PWD}) "))
-    if [[ -z "$out" ]]; then
-        return 0
-    fi
-    xdg-open <<< $out
-    return
-    local key="$(head -1 <<< "${out[@]}")"
-    # we save it as an array instead of one string to be able to parse it as separate arguments
-    case "$key" in
-        (ctrl-p)
-        for file in "${out[@]:1:a:q}"
-        do
-            LBUFFER+="${file} "
-        done
-        zle reset-prompt
-        ;;
-        (ctrl-o)
-        cd ${${out[@]:1:a}%/*}
-        print
-        zle fzf-redraw-prompt
-        ;;
-        (*)
-        file_opener <<< "${out[@]}"
-        ;;
-    esac
+    printf '\r'
+    eval 'myp=$(print -Pn "${PROMPT}")'
+    fd --color always --exclude node_modules | \
+    fzf \
+        --prompt="$myp" \
+        --bind 'ctrl-h:change-preview-window(right,75%|hidden|right,50%)' \
+        --bind 'ctrl-p:accept+execute-silent(open {+})' \
+        --preview-window='right,50%,border-left' | open
+    zle fzf-redraw-prompt
     zle reset-prompt
 }
 zle     -N    fzf-widget
@@ -173,31 +159,7 @@ bindkey '^P' fzf-widget
     esac
     [[ ! -z $DL_DIR ]] || return
     fzf-downloads-widget() {
-            # this ensures that file paths with spaces are not interpreted as different files
-            local IFS=$'\n'
-            setopt localoptions pipefail no_aliases 2> /dev/null
-            local out=($(ls --color=always -ctd1 ${(q)DL_DIR}/* | fzf --preview-window=right:68% --tiebreak=index --delimiter=/ --with-nth=5.. --no-sort --ansi --expect=ctrl-o,ctrl-p --prompt="$(_colorizer_abs_path $DL_DIR) "))
-            if [[ -z "$out" ]]; then
-                return 0
-            fi
-            local key="$(head -1 <<< "${out[@]}")"
-            case "$key" in
-                (ctrl-p)
-                    for file in "${out[@]:1:q}"
-                    do
-                        LBUFFER+="${file} "
-                    done
-                    ;;
-                (ctrl-o)
-                    cd "${${out[@]:1}%/*}"
-                    ;;
-                (*)
-                    if [[ "${#out[@]}" -eq 1 ]] && [[ -f "${out[1]}" ]] && [[ "${out[1]:e}" =~ "${_ZSH_FILE_OPENER_ARCHIVE_FORMATS//,/|}" ]]; then
-                        cd "${DL_DIR}"
-                    fi
-                    touch "${out[@]}" && file_opener <<< ${out[@]}
-                    ;;
-            esac
+            ls --color=always -ctd1 ${(q)DL_DIR}/* | fzf --tiebreak=index --delimiter=/ --with-nth=5.. --no-sort | open
             zle fzf-redraw-prompt
             zle reset-prompt
     }
@@ -216,18 +178,23 @@ fzf-password() {
 zle -N fzf-password
 fi
 
-alias glo="\
+alias glo="printf '\r\x1b[1A'
+    eval 'myp=\$(print -Pn \${_PROMPT})'
     git log \
         --date=format-local:'%Y-%m-%d %H:%M' \
         --pretty=format:'%C(red)%h %C(green)%cd%C(reset) %C(cyan)●%C(reset) %C(yellow)%an%C(reset) %C(cyan)●%C(reset) %s' \
         --abbrev-commit \
         --color=always | \
     fzf \
+        --header=\"\$myp\" \
+        --header-first \
         --delimiter=' ' \
         --no-sort \
         --no-extended \
         --with-nth=2.. \
+        --bind 'esc:abort+execute(printf \"\x1b[1A\r\")' \
         --bind 'enter:become(print -l -- {+1})' \
+        --bind 'alt-w:execute-silent(wl-copy -n -- {+1})+abort' \
         --bind 'ctrl-h:change-preview-window(down,75%|down,99%|hidden|down,50%)' \
         --bind 'ctrl-b:put( ● )' \
         --preview='
@@ -236,10 +203,10 @@ alias glo="\
         git show --color=always {1} | delta \$args' \
         --preview-window=bottom,50%,border-top"
 
-load='gs=$(git -c color.status=always status --short --untracked-files=all .)
+load='_gitstatus=$(git -c color.status=always status --short --untracked-files=all $PWD)
     {
-       rg "^\x1b\[32m.\x1b\[m" <<< $gs
-    rg -v "^\x1b\[32m.\x1b\[m" <<< $gs &!
+       rg "^\x1b\[32m.\x1b\[m" <<< $_gitstatus
+    rg -v "^\x1b\[32m.\x1b\[m" <<< $_gitstatus &!
     }'
 
 resetterm=$'\033[2J\033[3J\033[H'
@@ -248,14 +215,18 @@ magenta=$'\e[0;35;m'
 white=$'\e[0;37;m'
 reset=$'\e[0;m'
 quote='\\\"'
+
 alias gs="\
-    eval 'gitpath=\$cyan\${\$(git rev-parse --show-toplevel)##*/}\$white/\$(git rev-parse --show-prefix)\$reset'
+    eval 'myp=\$(print -Pn \${_PROMPT})'
     $load | fzf \
-        --prompt=\"\$gitpath \${magenta}❯\$reset \" \
+        --header=\"\$myp\" \
+        --header-first \
         --delimiter='' \
+        --exit-0 \
         --nth='4..' \
         --no-sort \
         --no-extended \
+        --bind 'esc:abort+execute(printf \"\x1b[1A\r\")' \
         --bind 'enter:become(print -l {+4..} | sed -e 's/^${quote}//' -e 's/${quote}$//')' \
         --bind 'ctrl-a:execute-silent(git add {+4..})+reload($load)' \
         --bind 'ctrl-c:execute-silent(git checkout {+4..})+reload($load)' \
