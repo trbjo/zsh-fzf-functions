@@ -186,7 +186,7 @@ alias glo="\
         --no-sort \
         --no-extended \
         --with-nth=2.. \
-        --bind 'enter:become(echo -n {+1})' \
+        --bind 'enter:become(print -l -- {+1})' \
         --bind 'ctrl-h:change-preview-window(down,75%|down,99%|hidden|down,50%)' \
         --bind 'ctrl-b:put( ● )' \
         --preview='
@@ -207,6 +207,7 @@ cyan=$'\e[1;36;m'
 magenta=$'\e[0;35;m'
 white=$'\e[0;37;m'
 reset=$'\e[0;m'
+quote='\\\"'
 alias dirty="\
     eval 'gitpath=\$cyan\${\$(git rev-parse --show-toplevel)##*/}\$white/\$(git rev-parse --show-prefix)\$reset'
     $load | fzf \
@@ -215,7 +216,7 @@ alias dirty="\
         --nth='4..' \
         --no-sort \
         --no-extended \
-        --bind 'enter:become(echo -n {+4..})' \
+        --bind 'enter:become(print -l {+4..} | sed -e 's/^${quote}//' -e 's/${quote}$//')' \
         --bind 'ctrl-a:execute-silent(git add {+4..})+reload($load)' \
         --bind 'ctrl-c:execute-silent(git checkout {+4..})+reload($load)' \
         --bind 'ctrl-r:execute-silent(git restore --staged {+4..})+reload($load)' \
