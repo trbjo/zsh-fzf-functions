@@ -111,25 +111,21 @@ fzf-redraw-prompt() {
 }
 zle -N fzf-redraw-prompt
 
-alias myfzf="printf '\r\x1b[1A'
-    eval 'myp=\$(print -Pn \${PROMPT})'
+alias myfzf="eval 'myp=\$(print -Pn \${PROMPT})'
     fd --color always --exclude node_modules | \
     fzf \
         --prompt=\"\$myp\" \
         --bind 'ctrl-h:change-preview-window(right,75%|hidden|right,50%)' \
-        --bind 'esc:abort+execute(printf \"\x1b[1A\r\")' \
         --preview-window=right,50%,border-left"
 
 
 
 fzf-widget() {
-    printf '\r'
     eval 'myp=$(print -Pn "${PROMPT}")'
     fd --color always --exclude node_modules | \
     fzf \
         --prompt="$myp" \
         --bind 'ctrl-h:change-preview-window(right,75%|hidden|right,50%)' \
-        --bind 'ctrl-p:accept+execute-silent(open {+})' \
         --preview-window='right,50%,border-left' | open
     zle fzf-redraw-prompt
     zle reset-prompt
@@ -178,8 +174,7 @@ fzf-password() {
 zle -N fzf-password
 fi
 
-alias glo="printf '\r\x1b[1A'
-    eval 'myp=\$(print -Pn \${_PROMPT})'
+alias glo="eval 'myp=\$(print -Pn \${_PROMPT})'
     git log \
         --date=format-local:'%Y-%m-%d %H:%M' \
         --pretty=format:'%C(red)%h %C(green)%cd%C(reset) %C(cyan)●%C(reset) %C(yellow)%an%C(reset) %C(cyan)●%C(reset) %s' \
@@ -192,7 +187,6 @@ alias glo="printf '\r\x1b[1A'
         --no-sort \
         --no-extended \
         --with-nth=2.. \
-        --bind 'esc:abort+execute(printf \"\x1b[1A\r\")' \
         --bind 'enter:become(print -l -- {+1})' \
         --bind 'alt-w:execute-silent(wl-copy -n -- {+1})+abort' \
         --bind 'ctrl-h:change-preview-window(down,75%|down,99%|hidden|down,50%)' \
@@ -226,8 +220,8 @@ alias gs="\
         --nth='4..' \
         --no-sort \
         --no-extended \
-        --bind 'esc:abort+execute(printf \"\x1b[1A\r\")' \
         --bind 'enter:become(print -l {+4..} | sed -e 's/^${quote}//' -e 's/${quote}$//')' \
+        --bind 'ctrl-p:execute-silent(open {+4..})+become(print -l {+4..} | sed -e 's/^${quote}//' -e 's/${quote}$//')' \
         --bind 'ctrl-a:execute-silent(git add {+4..})+reload($load)' \
         --bind 'ctrl-c:execute-silent(git checkout {+4..})+reload($load)' \
         --bind 'ctrl-r:execute-silent(git restore --staged {+4..})+reload($load)' \
