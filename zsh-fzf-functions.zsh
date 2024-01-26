@@ -29,10 +29,8 @@ alt-c:page-up,\
 ctrl-e:replace-query,\
 ctrl-b:toggle-all,\
 change:top,\
-ctrl-/:execute-silent(rm -rf {+})+abort,\
 ctrl-r:toggle-sort,\
 ctrl-q:unix-line-discard\" \
---multi \
 --preview-window=right:50%:sharp:wrap \
 --preview 'if [[ -d {} ]]
     then
@@ -161,7 +159,7 @@ alias glo="eval 'myp=\$(print -Pn \${_PROMPT})'
         --preview-window=bottom,50%,border-top"
 
 load='_gitstatus=$(git -c color.status=always status --short --untracked-files=all $PWD)
-    {
+    (( ${#_gitstatus} > 1 )) && {
        rg "^\x1b\[32m.\x1b\[m" <<< $_gitstatus
     rg -v "^\x1b\[32m.\x1b\[m" <<< $_gitstatus &!
     }'
@@ -187,6 +185,7 @@ alias gs="\
         --bind 'ctrl-p:execute-silent(open {+4..})+become(print -l {+4..} | sed -e 's/^${quote}//' -e 's/${quote}$//')' \
         --bind 'ctrl-a:execute-silent(git add {+4..})+reload($load)' \
         --bind 'ctrl-c:execute-silent(git checkout {+4..})+reload($load)' \
+        --bind 'ctrl-/:execute-silent(rm {+4..})+reload($load)' \
         --bind 'ctrl-r:execute-silent(git restore --staged {+4..})+reload($load)' \
         --bind 'ctrl-n:execute(git add -p {+4..}; printf \"$resetterm\")+reload($load)' \
         --bind 'ctrl-h:change-preview-window(down,75%|down,99%|hidden|down,50%)' \
