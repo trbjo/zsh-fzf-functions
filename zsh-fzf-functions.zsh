@@ -1,33 +1,18 @@
 # Paste the selected command(s) from history into the command line
 fzf-history-widget() {
-    local IFS=$'\n'
-    local NEWLINE=$'\n'
-    local out myQuery line REPLACE separator_var=";"
-    setopt localoptions noglobsubst noposixbuiltins pipefail no_aliases 2> /dev/null
-
-    if [[ ${LBUFFER: -3} != "&& " ]] && [[ ${LBUFFER: -2} != "; " ]] && [[ ${LBUFFER: -2} != "&&" ]] && [[ ${LBUFFER: -1} != ";" ]]; then
-        REPLACE=true
-        myQuery="\'${(qqq)LBUFFER}"
-    fi
-
-    local out=( $(fc -rnli 1 | sed -r "s/^(................)/`printf '\033[4m'`\1`printf '\033[0m'`/" |
-                 FZF_DEFAULT_OPTS=" $FZF_DEFAULT_OPTS --no-sort --prompt=\"$(print -Pn ${PROMPT_PWD:-$PWD}) \" --expect=ctrl-/,ctrl-p,enter --delimiter='  ' --nth=2.. --preview-window=bottom,30% --preview 'bat --style=plain  --color always --language bash <<< {2..}' --no-hscroll --tiebreak=index --bind \"alt-w:execute-silent(wl-copy -- {2..})+abort\" --query=${myQuery}" fzf) )
-
-    if [[ -n "$out" ]]; then
-        if [[ ${LBUFFER: -2} == "&&" ]] || [[ ${LBUFFER: -1} == ";" ]]; then
-            LBUFFER+=' '
-        fi
-
-        key="${out[@]:0:1}"
-        if [[ "$key" == "ctrl-p" ]]; then
-            separator_var=" &&"
-        fi
-        [[ $REPLACE ]] && LBUFFER="${${${out[@]:1:1}#*:[0-9][0-9]  }//\\n/$NEWLINE}" || LBUFFER+="${${${out[@]:1:1}#*:[0-9][0-9]  }//\\n/$NEWLINE}"
-        for hist in "${out[@]:2}"; do
-            hist=${hist//\\n/$NEWLINE}
-            LBUFFER+="$separator_var ${hist#*:[0-9][0-9]  }"
-        done
-    fi
+    LBUFFER+=$(fc -rnli 1 | \
+    sed -r "s/^(................)/`printf '\033[4m'`\1`printf '\033[0m \033[37m│\033[0m'`/" | \
+    fzf \
+     --delimiter='  ' \
+     --nth=2.. \
+     --no-sort \
+     --no-extended \
+     --bind 'enter:execute(print -l -- {+2..})+abort' \
+     --no-hscroll \
+     --tiebreak=index \
+     --query="${LBUFFER}" \
+     --preview-window=bottom,30% \
+     --preview 'echo {2..}')
     zle reset-prompt
 }
 zle -N fzf-history-widget
@@ -46,7 +31,7 @@ ctrl-q:unix-line-discard\" \
 --preview-window=right:50%:sharp:wrap \
 --preview 'if [[ -d {} ]]
     then
-        ls --color=always -l {}
+        fancyls {}
     elif [[ {} =~ \"\.(jpeg|JPEG|jpg|JPG|png|webp|WEBP|PNG|gif|GIF|bmp|BMP|tif|TIF|tiff|TIFF)$\" ]]
     then
         identify -ping -format \"%f\\n%m\\n%w x %h pixels\\n%b\\n\\n%l\\n%c\\n\" {}
@@ -73,26 +58,15 @@ fi
 if type rg > /dev/null 2>&1; then
 alias fif='noglob _fif'
 _fif() {
-    [[ "$#" -eq 0 ]] && print "Need a string to search for!" && return 1
-    local IFS=$'\n'
-    setopt localoptions pipefail no_aliases 2> /dev/null
-    local myQuery="$@"
-    local out=($(rg --files-with-matches --no-messages "$myQuery" | fzf --expect=ctrl-p --prompt="$(print -Pn "${PROMPT_PWD:-$PWD} \e[3m$myQuery\e[0m") " --preview "rg $RIPGREP_OPTS --pretty --context 10 '$myQuery' {}"))
-    if [[ -z "$out" ]]; then
-        return 0
-    fi
-
-   local key="$(head -1 <<< "${out[@]}")"
-   case "$key" in
-       (ctrl-p)
-       swaymsg -q -- "exec /opt/sublime_text/sublime_text --command close_all"
-       swaymsg -q -- "[app_id=^PopUp$] move scratchpad; [app_id=^sublime_text$ title=.] focus; exec /opt/sublime_text/sublime_text ${(q)${out[@]:1:A}}"
-       ;;
-       (*)
-       swaymsg -q -- "[app_id=^PopUp$] move scratchpad; [app_id=^sublime_text$ title=.] focus; exec /opt/sublime_text/sublime_text ${(q)out[@]:A}"
-       ;;
-   esac
-   return 0
+    [[ -z "$@" ]] && print "Need a string to search for!" && return 1
+    rg \
+    --files-with-matches \
+     --no-messages \
+     "$@" | \
+      fzf \
+      --prompt="$(print -Pn "${PROMPT_PWD:-$PWD} \e[3m$myQuery\e[0m") " \
+      --preview \
+      "rg $RIPGREP_OPTS --pretty --context 10 '$@' {}"
 }
 fi
 
