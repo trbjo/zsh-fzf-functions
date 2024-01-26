@@ -2,20 +2,22 @@
 fzf-history-widget() {
     format_start=$'\033[4m'
     format_end=$'\033[0m \033[37m│\033[0m'
-    LBUFFER+=$(fc -rnli 1 | \
-    sed -r "s/^(.{16})./$format_start\1$format_end/" | \
+    numbers=($(fc -rli 1 | \
+    sed -r "s/^ ?([0-9]{1,5}).(.{16})./\1$format_start\2$format_end/" | \
     fzf \
      --delimiter=' ' \
-     --nth=4.. \
+     --with-nth=2.. \
      --no-sort \
      --prompt="$(print -Pn ${_PROMPT})" \
      --no-extended \
-     --bind 'enter:execute(print -l -- {+4..})+abort' \
+     --bind 'enter:execute(echo {+1})+abort' \
      --no-hscroll \
      --tiebreak=index \
      --query="${LBUFFER}" \
      --preview-window=bottom,30% \
-     --preview 'echo {4..}')
+     --preview "xargs -0 <<< {6..}"))
+    LBUFFER+="${history[${numbers[1]}]}"
+    for number in ${numbers[@]:1}; LBUFFER+=$'\n'${history[$number]}
     zle reset-prompt
 }
 zle -N fzf-history-widget
