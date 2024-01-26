@@ -55,20 +55,17 @@ if type fd > /dev/null 2>&1; then
 fi
 
 
-if type rg > /dev/null 2>&1; then
 alias fif='noglob _fif'
 _fif() {
     [[ -z "$@" ]] && print "Need a string to search for!" && return 1
     rg \
-    --files-with-matches \
-     --no-messages \
-     "$@" | \
-      fzf \
-      --prompt="$(print -Pn "${PROMPT_PWD:-$PWD} \e[3m$myQuery\e[0m") " \
-      --preview \
-      "rg $RIPGREP_OPTS --pretty --context 10 '$@' {}"
+        --files-with-matches \
+        --no-messages \
+        "$@" | \
+    fzf \
+        --prompt="$(print -Pn "${PROMPT_PWD:-$PWD} \e[3m$myQuery\e[0m") " \
+        --preview "rg $RIPGREP_OPTS --pretty --context 10 '$@' {}"
 }
-fi
 
 
 # Ensure precmds are run after cd
