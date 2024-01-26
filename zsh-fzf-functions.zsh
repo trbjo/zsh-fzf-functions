@@ -55,11 +55,6 @@ else bat \
     --italic-text=always \
     --line-range :70 {} 2>/dev/null; fi'"
 
-if type fd > /dev/null 2>&1; then
-    export FZF_DEFAULT_COMMAND="/usr/bin/fd --color always --exclude node_modules"
-fi
-
-
 alias fif='noglob _fif'
 _fif() {
     [[ -z "$@" ]] && print "Need a string to search for!" && return 1
@@ -82,10 +77,7 @@ fzf-redraw-prompt() {
 }
 zle -N fzf-redraw-prompt
 
-alias myfzf="eval 'myp=\$(print -Pn \${PROMPT})'
-    fd --color always --exclude node_modules | \
-    fzf \
-        --prompt=\"\$myp\" \
+alias myfzf="fzf \
         --bind 'ctrl-h:change-preview-window(right,75%|hidden|right,50%)' \
         --preview-window=right,50%,border-left"
 
@@ -93,7 +85,7 @@ alias myfzf="eval 'myp=\$(print -Pn \${PROMPT})'
 
 fzf-widget() {
     eval 'myp=$(print -Pn "${PROMPT}")'
-    fd --color always --exclude node_modules | \
+    fd --color always --hidden --exclude node_modules | \
     fzf \
         --prompt="$myp" \
         --bind 'ctrl-h:change-preview-window(right,75%|hidden|right,50%)' \
