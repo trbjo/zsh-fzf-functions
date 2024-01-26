@@ -1,18 +1,21 @@
 # Paste the selected command(s) from history into the command line
 fzf-history-widget() {
+    format_start=$'\033[4m'
+    format_end=$'\033[0m \033[37m│\033[0m'
     LBUFFER+=$(fc -rnli 1 | \
-    sed -r "s/^(................)/`printf '\033[4m'`\1`printf '\033[0m \033[37m│\033[0m'`/" | \
+    sed -r "s/^(.{16})./$format_start\1$format_end/" | \
     fzf \
-     --delimiter='  ' \
-     --nth=2.. \
+     --delimiter=' ' \
+     --nth=4.. \
      --no-sort \
+     --prompt="$(print -Pn ${_PROMPT})" \
      --no-extended \
-     --bind 'enter:execute(print -l -- {+2..})+abort' \
+     --bind 'enter:execute(print -l -- {+4..})+abort' \
      --no-hscroll \
      --tiebreak=index \
      --query="${LBUFFER}" \
      --preview-window=bottom,30% \
-     --preview 'echo {2..}')
+     --preview 'echo {4..}')
     zle reset-prompt
 }
 zle -N fzf-history-widget
