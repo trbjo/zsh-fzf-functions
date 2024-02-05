@@ -1,27 +1,30 @@
 # Paste the selected command(s) from history into the command line
 fzf-history-widget() {
+    newline=$'\n'
+    _prompt=$(print -Pn ${${(e)PROMPT}##*${newline}})
+
     format_start=$'\033[4m'
     format_end=$'\033[0m \033[37m│\033[0m'
     numbers=($(fc -rli 1 | \
-    sed -r "s/^ ?([0-9]{1,5}).(.{16})./\1$format_start\2$format_end/" | \
+    sed -r "s/^ {0,4}([0-9]{1,5}).(.{17})./\1$format_start\2$format_end/" | \
     fzf \
      --delimiter=' ' \
      --with-nth=2.. \
      --no-sort \
-     --prompt="$(print -Pn ${_PROMPT})" \
+     --prompt="$_prompt" \
      --no-extended \
      --bind 'enter:execute(echo {+1})+abort' \
      --no-hscroll \
-     --tiebreak=index \
      --query="${LBUFFER}" \
-     --preview-window=bottom,30% \
-     --preview "xargs -0 <<< {6..}"))
+     --preview-window='bottom,30%' \
+     --preview "xargs -0 <<< {5..}"))
     LBUFFER+="${history[${numbers[1]}]}"
     for number in ${numbers[@]:1}; LBUFFER+=$'\n'${history[$number]}
     zle reset-prompt
 }
 zle -N fzf-history-widget
 bindkey '^R' fzf-history-widget
+
 
 export FZF_DEFAULT_OPTS="${FZF_DEFAULT_OPTS} \
 --bind \"alt-t:page-down,\
@@ -34,7 +37,7 @@ ctrl-q:unix-line-discard\" \
 --preview-window=right:50%:sharp:wrap \
 --preview 'if [[ -d {} ]]
     then
-        fancyls {}
+        fancyls --color=always --hyperlink=always {}
     elif [[ {} =~ \"\.(jpeg|JPEG|jpg|JPG|png|webp|WEBP|PNG|gif|GIF|bmp|BMP|tif|TIF|tiff|TIFF)$\" ]]
     then
         identify -ping -format \"%f\\n%m\\n%w x %h pixels\\n%b\\n\\n%l\\n%c\\n\" {}
@@ -72,57 +75,28 @@ fzf-redraw-prompt() {
     for precmd in $precmd_functions; do
         $precmd
     done
+    zle reset-prompt
 }
 zle -N fzf-redraw-prompt
 
 alias myfzf="fzf \
         --bind 'ctrl-h:change-preview-window(right,75%|hidden|right,50%)' \
         --preview-window=right,50%,border-left"
+alias -g F='| myfzf'
 
 
 
 fzf-widget() {
-    eval 'myp=$(print -Pn "${PROMPT}")'
     fd --color always --hidden --exclude node_modules | \
     fzf \
-        --prompt="$myp" \
+        --prompt="$(print -Pn "${PROMPT}")" \
         --bind 'ctrl-h:change-preview-window(right,75%|hidden|right,50%)' \
         --preview-window='right,50%,border-left' | open
     zle fzf-redraw-prompt
-    zle reset-prompt
 }
 zle     -N    fzf-widget
 bindkey '^P' fzf-widget
 
-() {
-    # we locale the download directory
-    case $OSTYPE in
-         (darwin*)
-            DL_DIR="$HOME/Downloads"
-            ;;
-        (linux-gnu)
-            while read line
-            do
-                if [[ $line == XDG_DOWNLOAD_DIR* ]]; then
-                    DL_DIR=${(P)line##*=}
-                    break
-                fi
-            done < "${XDG_CONFIG_HOME:-$HOME/.config}/user-dirs.dirs"
-            ;;
-         (*)
-            print "Your platform is not supported. Please open an issue"
-            return 1
-            ;;
-    esac
-    [[ ! -z $DL_DIR ]] || return
-    fzf-downloads-widget() {
-            ls --color=always -ctd1 ${(q)DL_DIR}/* | fzf --tiebreak=index --delimiter=/ --with-nth=5.. --no-sort | open
-            zle fzf-redraw-prompt
-            zle reset-prompt
-    }
-    zle -N fzf-downloads-widget
-    bindkey '^O' fzf-downloads-widget
-}
 
 
 if type pass > /dev/null 2>&1; then
